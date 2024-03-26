@@ -1,0 +1,15 @@
+{
+  "name": "fixmebackend",
+  "version": "1.0.0",
+  "description": "express js. back end with CRUD to handle user and admin data",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Aleksandra Kuzeleva",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.19.1",
+    "mysql": "^2.18.1"
+  }
+}
