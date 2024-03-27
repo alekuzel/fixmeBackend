@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS users (
     lastName VARCHAR(255) NOT NULL,
     phoneNumber VARCHAR(20),
     age INT,
-    image VARCHAR(255), -- Assuming image is stored as a file path
+    image VARCHAR(255),
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )
 `;
@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS login_history (
     ipAddress VARCHAR(45) NOT NULL,
     loginTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     isSuccess BOOLEAN,
-    FOREIGN KEY (userId) REFERENCES users(id) -- Ensure userId references the id column in users table
+    FOREIGN KEY (userId) REFERENCES users(id)
 )
 `;
 
@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS admins (
     email VARCHAR(255) NOT NULL,
     phoneNumber VARCHAR(20),
     role ENUM('admin', 'superadmin'),
-    image VARCHAR(255), -- assuming image is stored as a file path
+    image VARCHAR(255),
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )
 `;
