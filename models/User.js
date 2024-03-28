@@ -1,5 +1,5 @@
 // Import the database connection pool
-const pool = require('./database');
+const pool = require('../database');
 
 // User model
 const User = {

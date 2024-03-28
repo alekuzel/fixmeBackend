@@ -2,8 +2,8 @@ const express = require('express');
 const bodyParser = require('body-parser');
 
 // Import controllers
-const userController = require('./controllers/usersController');
-const adminController = require('./controllers/adminsController');
+const usersController = require('./controllers/usersController');
+const adminsController = require('./controllers/adminsController');
 // Import other controllers as needed
 
 const app = express();

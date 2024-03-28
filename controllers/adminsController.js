@@ -1,5 +1,5 @@
 const express = require('express');
-const Admin = require('./models/Admin'); // Import your Admin model
+const Admin = require('../models/Admin'); // Import your Admin model
 const router = express.Router();
 
 // Create a new admin
