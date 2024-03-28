@@ -7,7 +7,7 @@ const pool = mysql.createPool({
     user: 'root',
     password: '1234',
     database: 'fixmeapp',
-    port: 3310
+    port: 3004
 });
 
 // Define schema for users table
@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS users (
     lastName VARCHAR(255) NOT NULL,
     phoneNumber VARCHAR(20),
     age INT,
+    email VARCHAR(255) NOT NULL,
     image VARCHAR(255),
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )
@@ -49,8 +50,6 @@ CREATE TABLE IF NOT EXISTS admins (
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )
 `;
-
-
 
 // Define schema for procedure types table
 const procedureTypesTableSchema = `
