@@ -7,7 +7,7 @@ const pool = mysql.createPool({
     user: 'root',
     password: '1234',
     database: 'fixmeapp',
-    port: 3004
+    port: 3310
 });
 
 // Define schema for users table
@@ -20,7 +20,8 @@ CREATE TABLE IF NOT EXISTS users (
     age INT,
     email VARCHAR(255) NOT NULL,
     image VARCHAR(255),
-    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 )
 `;
 
@@ -36,7 +37,6 @@ CREATE TABLE IF NOT EXISTS login_history (
 )
 `;
 
-
 // Define schema for admins table
 const adminsTableSchema = `
 CREATE TABLE IF NOT EXISTS admins (
@@ -51,22 +51,22 @@ CREATE TABLE IF NOT EXISTS admins (
 )
 `;
 
-// Define schema for procedure types table
-const procedureTypesTableSchema = `
-CREATE TABLE IF NOT EXISTS procedure_types (
+// Define schema for categories table
+const categoriesTableSchema = `
+CREATE TABLE IF NOT EXISTS categories (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL
 )
 `;
 
-// Define schema for user procedures table (many-to-many relationship)
-const userProceduresTableSchema = `
-CREATE TABLE IF NOT EXISTS user_procedures (
+// Define schema for services table
+const servicesTableSchema = `
+CREATE TABLE IF NOT EXISTS services (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    userId INT,
-    procedureId INT,
-    FOREIGN KEY (userId) REFERENCES users(id),
-    FOREIGN KEY (procedureId) REFERENCES procedure_types(id)
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    categoryId INT,
+    FOREIGN KEY (categoryId) REFERENCES categories(id)
 )
 `;
 
@@ -86,14 +86,14 @@ pool.query(loginHistoryTableSchema, (err, results) => {
     console.log('Login history table created successfully');
 });
 
-pool.query(procedureTypesTableSchema, (err, results) => {
+pool.query(categoriesTableSchema, (err, results) => {
     if (err) throw err;
-    console.log('Procedure types table created successfully');
+    console.log('Categories table created successfully');
 });
 
-pool.query(userProceduresTableSchema, (err, results) => {
+pool.query(servicesTableSchema, (err, results) => {
     if (err) throw err;
-    console.log('User procedures table created successfully');
+    console.log('Services table created successfully');
 });
 
 module.exports = pool; // Export the database connection pool
