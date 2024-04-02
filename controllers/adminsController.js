@@ -3,7 +3,7 @@ const Admin = require('../models/Admin'); // Import your Admin model
 const router = express.Router();
 
 // Create a new admin
-router.post('/admins', async (req, res) => {
+router.post('/', async (req, res) => {
     try {
         const admin = new Admin(req.body);
         await admin.save();
@@ -14,7 +14,7 @@ router.post('/admins', async (req, res) => {
 });
 
 // Get all admins
-router.get('/admins', async (req, res) => {
+router.get('/', async (req, res) => {
     try {
         const admins = await Admin.find();
         res.json(admins);
@@ -24,7 +24,7 @@ router.get('/admins', async (req, res) => {
 });
 
 // Get a single admin by ID
-router.get('/admins/:id', async (req, res) => {
+router.get('/:id', async (req, res) => {
     try {
         const admin = await Admin.findById(req.params.id);
         if (!admin) {
@@ -37,7 +37,7 @@ router.get('/admins/:id', async (req, res) => {
 });
 
 // Update an admin by ID
-router.put('/admins/:id', async (req, res) => {
+router.put('/:id', async (req, res) => {
     try {
         const admin = await Admin.findByIdAndUpdate(req.params.id, req.body, { new: true });
         if (!admin) {
@@ -50,7 +50,7 @@ router.put('/admins/:id', async (req, res) => {
 });
 
 // Delete an admin by ID
-router.delete('/admins/:id', async (req, res) => {
+router.delete('/:id', async (req, res) => {
     try {
         const admin = await Admin.findByIdAndDelete(req.params.id);
         if (!admin) {

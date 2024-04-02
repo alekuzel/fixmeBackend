@@ -3,7 +3,7 @@ const router = express.Router();
 const User = require('../models/User');
 
 // Create a new user
-router.post('/users', (req, res) => {
+router.post('/', (req, res) => {
     const userData = req.body;
     User.create(userData, (error, result) => {
         if (error) {
@@ -15,7 +15,7 @@ router.post('/users', (req, res) => {
 });
 
 // Get all users
-router.get('/users', (req, res) => {
+router.get('/', (req, res) => {
     User.getAll((error, users) => {
         if (error) {
             console.error('Error fetching users:', error);
@@ -26,7 +26,7 @@ router.get('/users', (req, res) => {
 });
 
 // Get a user by ID
-router.get('/users/:id', (req, res) => {
+router.get('/:id', (req, res) => {
     const userId = req.params.id;
     User.getById(userId, (error, user) => {
         if (error) {
@@ -41,7 +41,7 @@ router.get('/users/:id', (req, res) => {
 });
 
 // Update a user by ID
-router.put('/users/:id', (req, res) => {
+router.put('/:id', (req, res) => {
     const userId = req.params.id;
     const userData = req.body;
     User.updateById(userId, userData, (error, result) => {
@@ -54,7 +54,7 @@ router.put('/users/:id', (req, res) => {
 });
 
 // Delete a user by ID
-router.delete('/users/:id', (req, res) => {
+router.delete('/:id', (req, res) => {
     const userId = req.params.id;
     User.deleteById(userId, (error, result) => {
         if (error) {
