@@ -3,63 +3,66 @@ const Admin = require('../models/Admin'); // Import your Admin model
 const router = express.Router();
 
 // Create a new admin
-router.post('/', async (req, res) => {
-    try {
-        const admin = new Admin(req.body);
-        await admin.save();
-        res.status(201).json(admin);
-    } catch (error) {
-        res.status(400).json({ message: error.message });
-    }
+router.post('/', (req, res) => {
+    const adminData = req.body;
+    Admin.create(adminData, (error, result) => {
+        if (error) {
+            console.error('Error creating admin:', error);
+            return res.status(500).json({ error: 'Error creating admin' });
+        }
+        res.status(201).json({ message: 'Admin created successfully', admin: result });
+    });
 });
 
 // Get all admins
-router.get('/', async (req, res) => {
-    try {
-        const admins = await Admin.find();
-        res.json(admins);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
+router.get('/', (req, res) => {
+    Admin.getAll((error, admins) => {
+        if (error) {
+            console.error('Error fetching admins:', error);
+            return res.status(500).json({ error: 'Error fetching admins' });
+        }
+        res.status(200).json(admins);
+    });
 });
 
-// Get a single admin by ID
-router.get('/:id', async (req, res) => {
-    try {
-        const admin = await Admin.findById(req.params.id);
-        if (!admin) {
-            return res.status(404).json({ message: 'Admin not found' });
+// Get admin by ID
+router.get('/:id', (req, res) => {
+    const adminId = req.params.id;
+    Admin.getById(adminId, (error, admin) => {
+        if (error) {
+            console.error('Error fetching admin:', error);
+            return res.status(500).json({ error: 'Error fetching admin' });
         }
-        res.json(admin);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
+        if (!admin) {
+            return res.status(404).json({ error: 'Admin with given id is not found' });
+        }
+        res.status(200).json(admin);
+    });
 });
 
-// Update an admin by ID
-router.put('/:id', async (req, res) => {
-    try {
-        const admin = await Admin.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        if (!admin) {
-            return res.status(404).json({ message: 'Admin not found' });
+// Update admin by ID
+router.put('/:id', (req, res) => {
+    const adminId = req.params.id;
+    const adminData = req.body;
+    Admin.updateById(adminId, adminData, (error, result) => {
+        if (error) {
+            console.error('Error updating admin:', error);
+            return res.status(500).json({ error: 'Error updating admin' });
         }
-        res.json(admin);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
+        res.status(200).json({ message: 'Admin updated successfully' });
+    });
 });
 
-// Delete an admin by ID
-router.delete('/:id', async (req, res) => {
-    try {
-        const admin = await Admin.findByIdAndDelete(req.params.id);
-        if (!admin) {
-            return res.status(404).json({ message: 'Admin not found' });
+// Delete a admin by ID
+router.delete('/:id', (req, res) => {
+    const adminId = req.params.id;
+    Admin.deleteById(adminId, (error, result) => {
+        if (error) {
+            console.error('Error deleting admin:', error);
+            return res.status(500).json({ error: 'Error deleting admin' });
         }
-        res.json({ message: 'Admin deleted' });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
+        res.status(200).json({ message: 'Admin deleted successfully' });
+    });
 });
 
 module.exports = router;

@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS users (
     age INT,
     email VARCHAR(255) NOT NULL,
     image VARCHAR(255),
+    password VARCHAR(255) NOT NULL, 
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 )
@@ -47,6 +48,7 @@ CREATE TABLE IF NOT EXISTS admins (
     phoneNumber VARCHAR(20),
     role ENUM('admin', 'superadmin'),
     image VARCHAR(255),
+    password VARCHAR(255) NOT NULL, 
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )
 `;
