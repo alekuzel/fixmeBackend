@@ -3,27 +3,35 @@ const Admin = require('../models/Admin'); // Import your Admin model
 const router = express.Router();
 
 // Create a new admin
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
     const adminData = req.body;
-    Admin.create(adminData, (error, result) => {
-        if (error) {
-            console.error('Error creating admin:', error);
-            return res.status(500).json({ error: 'Error creating admin' });
-        }
+    
+    // Validate required fields
+    if (!adminData.firstName || !adminData.lastName || !adminData.password) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    try {
+        const result = await Admin.create(adminData);
         res.status(201).json({ message: 'Admin created successfully', admin: result });
-    });
+    } catch (error) {
+        console.error('Error creating admin:', error);
+        return res.status(500).json({ error: 'Error creating admin' });
+    }
 });
 
 // Get all admins
-router.get('/', (req, res) => {
-    Admin.getAll((error, admins) => {
-        if (error) {
-            console.error('Error fetching admins:', error);
-            return res.status(500).json({ error: 'Error fetching admins' });
-        }
+router.get('/', async (req, res) => {
+    try {
+        const admins = await Admin.getAll();
         res.status(200).json(admins);
-    });
+    } catch (error) {
+        console.error('Error fetching admins:', error);
+        return res.status(500).json({ error: 'Error fetching admins' });
+    }
 });
+
+
 
 // Get admin by ID
 router.get('/:id', (req, res) => {

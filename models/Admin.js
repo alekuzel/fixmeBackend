@@ -1,78 +1,63 @@
-const pool = require('../database'); // Assuming you have a database connection pool set up
+const { pool } = require('../database');
+const bcrypt = require('bcrypt');
 
 const Admin = {
+    // Get admin by username
+    getByUsername: (username) => {
+        return new Promise((resolve, reject) => {
+            pool.query('SELECT * FROM admins WHERE Username = ?', username, (error, results, fields) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(results[0]);
+                }
+            });
+        });
+    },
     // Create a new admin
-    create: (adminData, callback) => {
-        pool.query('INSERT INTO admins SET ?', adminData, (error, results, fields) => {
-            if (error) {
-                // Handle error
-                return callback(error);
-            }
-            // If successful, return the inserted row
-            callback(null, results);
-        });
-    },
-    
-    // Get all admins
-    getAll: (callback) => {
-        pool.query('SELECT * FROM admins', (error, results, fields) => {
-            if (error) {
-                // Handle error
-                return callback(error);
-            }
-            // If successful, return all admin records
-            callback(null, results);
-        });
-    },
-    
-    // Get admin by ID
-    getById: (adminId, callback) => {
-        pool.query('SELECT * FROM admins WHERE id = ?', adminId, (error, results, fields) => {
-            if (error) {
-                // Handle error
-                return callback(error);
-            }
-            // If successful, return the first matching admin record
-            callback(null, results[0]);
-        });
-    },
-    
-    // Update admin by ID
-    updateById: (adminId, adminData, callback) => {
-        pool.query('UPDATE admins SET ? WHERE id = ?', [adminData, adminId], (error, results, fields) => {
-            if (error) {
-                // Handle error
-                return callback(error);
-            }
-            // If successful, return the updated row
-            callback(null, results);
-        });
-    },
-    
-    // Delete admin by ID
-    deleteById: (adminId, callback) => {
-        pool.query('DELETE FROM admins WHERE id = ?', adminId, (error, results, fields) => {
-            if (error) {
-                // Handle error
-                return callback(error);
-            }
-            // If successful, return the deleted row
-            callback(null, results);
-        });
-    },
+    create: async (adminData) => {
+        try {
+            const firstNamePrefix = adminData.firstName.slice(0, 3).toLowerCase();
+            const lastNamePrefix = adminData.lastName.slice(0, 3).toLowerCase();
 
-    // Find admins based on certain criteria
-    find: (criteria, callback) => {
-        // Example query: SELECT * FROM admins WHERE criteria
-        pool.query('SELECT * FROM admins WHERE ?', criteria, (error, results, fields) => {
-            if (error) {
-                // Handle error
-                return callback(error);
+            let username = `${firstNamePrefix}${lastNamePrefix}`;
+
+            let isUnique = false;
+            let suffix = 1;
+            while (!isUnique) {
+                const existingAdmin = await Admin.getByUsername(username);
+                if (!existingAdmin) {
+                    isUnique = true;
+                } else {
+                    suffix++;
+                    username = `${firstNamePrefix}${lastNamePrefix}${suffix}`;
+                }
             }
-            // If successful, return all matching admin records
-            callback(null, results);
-        });
-    }
+
+            adminData.Username = username;
+
+            const hashedPassword = await hashPassword(adminData.password);
+            adminData.password = hashedPassword;
+
+            return new Promise((resolve, reject) => {
+                pool.query('INSERT INTO admins SET ?', adminData, (error, results, fields) => {
+                    if (error) {
+                        reject(error);
+                    } else {
+                        resolve(results);
+                    }
+                });
+            });
+        } catch (error) {
+            throw error;
+        }
+    },
+    // Other methods...
+};
+
+const hashPassword = async (password) => {
+    const saltRounds = 10;
+    return await bcrypt.hash(password, saltRounds);
 };
 
 module.exports = Admin;

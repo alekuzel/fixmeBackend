@@ -1,4 +1,5 @@
 const mysql = require('mysql');
+const bcrypt = require('bcrypt');
 
 // Create a MySQL connection pool
 const pool = mysql.createPool({
@@ -18,7 +19,7 @@ CREATE TABLE IF NOT EXISTS users (
     lastName VARCHAR(255) NOT NULL,
     phoneNumber VARCHAR(20),
     age INT,
-    email VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
     image VARCHAR(255),
     password VARCHAR(255) NOT NULL, 
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -40,18 +41,24 @@ CREATE TABLE IF NOT EXISTS login_history (
 
 // Define schema for admins table
 const adminsTableSchema = `
-CREATE TABLE IF NOT EXISTS admins (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    firstName VARCHAR(255) NOT NULL,
-    lastName VARCHAR(255) NOT NULL,
-    email VARCHAR(255) NOT NULL,
-    phoneNumber VARCHAR(20),
-    role ENUM('admin', 'superadmin'),
-    image VARCHAR(255),
-    password VARCHAR(255) NOT NULL, 
-    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)
-`;
+                CREATE TABLE IF NOT EXISTS admins (
+                    adminID INT AUTO_INCREMENT PRIMARY KEY,
+                    firstName VARCHAR(255),
+                    lastName VARCHAR(255),
+                    username VARCHAR(255) UNIQUE,
+                    email VARCHAR(255) UNIQUE,
+                    twoFactorEnabled BOOLEAN,
+                    phoneNumber VARCHAR(20),
+                    password VARCHAR(255),
+                    role ENUM('superadmin', 'admin', 'support'),
+                    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    lastLogin DATETIME,
+                    status ENUM('active', 'inactive', 'suspended'),
+                    lastLoginIP VARCHAR(45),
+                    MFAEnabled BOOLEAN
+                )
+            `;
 
 // Define schema for categories table
 const categoriesTableSchema = `
@@ -98,9 +105,13 @@ pool.query(servicesTableSchema, (err, results) => {
     console.log('Services table created successfully');
 });
 
-module.exports = pool; // Export the database connection pool
+// Function to hash passwords
+const hashPassword = async (password) => {
+    const saltRounds = 10;
+    return await bcrypt.hash(password, saltRounds);
+};
 
-
-//CONTINUE WITH UNIQUE EMAILS AND HASHED PASSWORDS -- FROM LATEST CONVERSATION WITH CHATGPT
-//THEN AUTHENTICATION FOR ADMINS. DIFFERENT FOR ADMINS AND SUPERADMINS?
-//OT THIS WILL BE HANDLED BY FRONTEND? ASK CHATGPT
+module.exports = {
+    pool,
+    hashPassword
+};
