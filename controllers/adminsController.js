@@ -31,46 +31,42 @@ router.get('/', async (req, res) => {
     }
 });
 
-
-
 // Get admin by ID
-router.get('/:id', (req, res) => {
-    const id = req.params.id;
-    Admin.getById(id, (error, admin) => {
-        if (error) {
-            console.error('Error fetching admin:', error);
-            return res.status(500).json({ error: 'Error fetching admin' });
-        }
-        if (!admin) {
-            return res.status(404).json({ error: 'Admin with given id is not found' });
-        }
-        res.status(200).json(admin);
-    });
+router.get('/:id', async (req, res) => {
+    try {
+        const admin = await Admin.getById(req.params.id);
+        res.json(admin);
+    } catch (err) {
+        res.status(404).json({ message: err.message });
+    }
 });
 
-// Update admin by ID
-router.put('/:id', (req, res) => {
-    const id = req.params.id;
-    const adminData = req.body;
-    Admin.updateById(id, adminData, (error, result) => {
-        if (error) {
-            console.error('Error updating admin:', error);
-            return res.status(500).json({ error: 'Error updating admin' });
-        }
-        res.status(200).json({ message: 'Admin updated successfully' });
-    });
+
+// Update admin
+router.put('/:id', async (req, res) => {
+    try {
+        await Admin.updateById(req.params.id, req.body);
+        const updatedAdmin = await Admin.getById(req.params.id);
+        res.json(updatedAdmin);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
 });
 
-// Delete a admin by ID
-router.delete('/:id', (req, res) => {
-    const id = req.params.id;
-    Admin.deleteById(id, (error, result) => {
-        if (error) {
-            console.error('Error deleting admin:', error);
-            return res.status(500).json({ error: 'Error deleting admin' });
-        }
-        res.status(200).json({ message: 'Admin deleted successfully' });
-    });
+// Delete admin
+router.delete('/:id', async (req, res) => {
+    try {
+        await Admin.deleteById(req.params.id);
+        res.json({ message: 'Admin deleted successfully' });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
 });
 
 module.exports = router;
+
+
+
+
+//TEST ALL CRUD ONCE MORE AND 
+//START WITH AUTHENTICATION

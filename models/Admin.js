@@ -72,7 +72,11 @@ getById: (id) => {
             if (error) {
                 reject(error);
             } else {
-                resolve(results[0]);
+                if (results.length === 0) {
+                    reject(new Error('No admin found with this id'));
+                } else {
+                    resolve(results[0]);
+                }
             }
         });
     });
