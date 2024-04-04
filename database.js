@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS login_history (
 // Define schema for admins table
 const adminsTableSchema = `
                 CREATE TABLE IF NOT EXISTS admins (
-                    adminID INT AUTO_INCREMENT PRIMARY KEY,
+                    id INT AUTO_INCREMENT PRIMARY KEY,
                     firstName VARCHAR(255),
                     lastName VARCHAR(255),
                     username VARCHAR(255) UNIQUE,
@@ -55,7 +55,7 @@ const adminsTableSchema = `
                     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                     lastLogin DATETIME,
                     status ENUM('active', 'inactive', 'suspended'),
-                    lastLoginIP VARCHAR(45),
+                    lastLoginip VARCHAR(45),
                     MFAEnabled BOOLEAN
                 )
             `;

@@ -35,8 +35,8 @@ router.get('/', async (req, res) => {
 
 // Get admin by ID
 router.get('/:id', (req, res) => {
-    const adminId = req.params.id;
-    Admin.getById(adminId, (error, admin) => {
+    const id = req.params.id;
+    Admin.getById(id, (error, admin) => {
         if (error) {
             console.error('Error fetching admin:', error);
             return res.status(500).json({ error: 'Error fetching admin' });
@@ -50,9 +50,9 @@ router.get('/:id', (req, res) => {
 
 // Update admin by ID
 router.put('/:id', (req, res) => {
-    const adminId = req.params.id;
+    const id = req.params.id;
     const adminData = req.body;
-    Admin.updateById(adminId, adminData, (error, result) => {
+    Admin.updateById(id, adminData, (error, result) => {
         if (error) {
             console.error('Error updating admin:', error);
             return res.status(500).json({ error: 'Error updating admin' });
@@ -63,8 +63,8 @@ router.put('/:id', (req, res) => {
 
 // Delete a admin by ID
 router.delete('/:id', (req, res) => {
-    const adminId = req.params.id;
-    Admin.deleteById(adminId, (error, result) => {
+    const id = req.params.id;
+    Admin.deleteById(id, (error, result) => {
         if (error) {
             console.error('Error deleting admin:', error);
             return res.status(500).json({ error: 'Error deleting admin' });

@@ -66,9 +66,9 @@ getAll: () => {
     });
 },
 
-getById: (adminID) => {
+getById: (id) => {
     return new Promise((resolve, reject) => {
-        pool.query('SELECT * FROM admins WHERE adminID = ?', adminID, (error, results, fields) => {
+        pool.query('SELECT * FROM admins WHERE id = ?', id, (error, results, fields) => {
             if (error) {
                 reject(error);
             } else {
@@ -79,9 +79,9 @@ getById: (adminID) => {
 },
 
    // Update admin by ID
-   updateById: (adminID, adminData) => {
+   updateById: (id, adminData) => {
     return new Promise((resolve, reject) => {
-        pool.query('UPDATE admins SET ? WHERE adminID = ?', [adminData, adminID], (error, results, fields) => {
+        pool.query('UPDATE admins SET ? WHERE id = ?', [adminData, id], (error, results, fields) => {
             if (error) {
                 reject(error);
             } else {
@@ -92,9 +92,9 @@ getById: (adminID) => {
 },
 
 // Delete admin by ID
-deleteById: (adminID) => {
+deleteById: (id) => {
     return new Promise((resolve, reject) => {
-        pool.query('DELETE FROM admins WHERE adminID = ?', adminID, (error, results, fields) => {
+        pool.query('DELETE FROM admins WHERE id = ?', id, (error, results, fields) => {
             if (error) {
                 reject(error);
             } else {
