@@ -52,7 +52,58 @@ const Admin = {
             throw error;
         }
     },
-    // Other methods...
+
+  // Get all admins
+getAll: () => {
+    return new Promise((resolve, reject) => {
+        pool.query('SELECT * FROM admins', (error, results, fields) => {
+            if (error) {
+                reject(error);
+            } else {
+                resolve(results);
+            }
+        });
+    });
+},
+
+getById: (adminID) => {
+    return new Promise((resolve, reject) => {
+        pool.query('SELECT * FROM admins WHERE adminID = ?', adminID, (error, results, fields) => {
+            if (error) {
+                reject(error);
+            } else {
+                resolve(results[0]);
+            }
+        });
+    });
+},
+
+   // Update admin by ID
+   updateById: (adminID, adminData) => {
+    return new Promise((resolve, reject) => {
+        pool.query('UPDATE admins SET ? WHERE adminID = ?', [adminData, adminID], (error, results, fields) => {
+            if (error) {
+                reject(error);
+            } else {
+                resolve(results);
+            }
+        });
+    });
+},
+
+// Delete admin by ID
+deleteById: (adminID) => {
+    return new Promise((resolve, reject) => {
+        pool.query('DELETE FROM admins WHERE adminID = ?', adminID, (error, results, fields) => {
+            if (error) {
+                reject(error);
+            } else {
+                resolve(results);
+            }
+        });
+    });
+},
+
 };
 
 const hashPassword = async (password) => {
