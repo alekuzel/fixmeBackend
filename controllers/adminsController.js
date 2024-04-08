@@ -19,7 +19,7 @@ router.post('/', authenticateAdmin, async (req, res) => {
         console.error('Error creating admin:', error);
         return res.status(500).json({ error: 'Error creating admin' });
     }
-});
+});  
 
 // Get all admins
 router.get('/', authenticateAdmin, async (req, res) => {
@@ -69,5 +69,3 @@ module.exports = router;
 
 
 
-//TEST ALL CRUD ONCE MORE AND 
-//START WITH AUTHENTICATION

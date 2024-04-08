@@ -14,8 +14,8 @@ const Admin = {
             });
         });
     },
-    // Get admin by username
-    /*getByUsername: (username) => {
+
+    getByUsername: (username) => {
         return new Promise((resolve, reject) => {
             pool.query('SELECT * FROM admins WHERE Username = ?', username, (error, results, fields) => {
                 if (error) {
@@ -25,7 +25,8 @@ const Admin = {
                 }
             });
         });
-    },*/
+    },
+
     // Create a new admin
     create: async (adminData) => {
         try {
@@ -65,61 +66,60 @@ const Admin = {
         }
     },
 
-  // Get all admins
-getAll: () => {
-    return new Promise((resolve, reject) => {
-        pool.query('SELECT * FROM admins', (error, results, fields) => {
-            if (error) {
-                reject(error);
-            } else {
-                resolve(results);
-            }
-        });
-    });
-},
-
-getById: (id) => {
-    return new Promise((resolve, reject) => {
-        pool.query('SELECT * FROM admins WHERE id = ?', id, (error, results, fields) => {
-            if (error) {
-                reject(error);
-            } else {
-                if (results.length === 0) {
-                    reject(new Error('No admin found with this id'));
+    // Get all admins
+    getAll: () => {
+        return new Promise((resolve, reject) => {
+            pool.query('SELECT * FROM admins', (error, results, fields) => {
+                if (error) {
+                    reject(error);
                 } else {
-                    resolve(results[0]);
+                    resolve(results);
                 }
-            }
+            });
         });
-    });
-},
+    },
 
-   // Update admin by ID
-   updateById: (id, adminData) => {
-    return new Promise((resolve, reject) => {
-        pool.query('UPDATE admins SET ? WHERE id = ?', [adminData, id], (error, results, fields) => {
-            if (error) {
-                reject(error);
-            } else {
-                resolve(results);
-            }
+    getById: (id) => {
+        return new Promise((resolve, reject) => {
+            pool.query('SELECT * FROM admins WHERE id = ?', id, (error, results, fields) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    if (results.length === 0) {
+                        reject(new Error('No admin found with this id'));
+                    } else {
+                        resolve(results[0]);
+                    }
+                }
+            });
         });
-    });
-},
+    },
 
-// Delete admin by ID
-deleteById: (id) => {
-    return new Promise((resolve, reject) => {
-        pool.query('DELETE FROM admins WHERE id = ?', id, (error, results, fields) => {
-            if (error) {
-                reject(error);
-            } else {
-                resolve(results);
-            }
+    // Update admin by ID
+    updateById: (id, adminData) => {
+        return new Promise((resolve, reject) => {
+            pool.query('UPDATE admins SET ? WHERE id = ?', [adminData, id], (error, results, fields) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(results);
+                }
+            });
         });
-    });
-},
+    },
 
+    // Delete admin by ID
+    deleteById: (id) => {
+        return new Promise((resolve, reject) => {
+            pool.query('DELETE FROM admins WHERE id = ?', id, (error, results, fields) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(results);
+                }
+            });
+        });
+    },
 };
 
 const hashPassword = async (password) => {
