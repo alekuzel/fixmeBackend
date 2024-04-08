@@ -1,9 +1,10 @@
 const express = require('express');
 const Admin = require('../models/Admin'); // Import your Admin model
+const authenticateAdmin = require('../middleware/authMiddleware'); // Import the authenticateAdmin middleware
 const router = express.Router();
 
 // Create a new admin
-router.post('/', async (req, res) => {
+router.post('/', authenticateAdmin, async (req, res) => {
     const adminData = req.body;
     
     // Validate required fields
@@ -21,7 +22,7 @@ router.post('/', async (req, res) => {
 });
 
 // Get all admins
-router.get('/', async (req, res) => {
+router.get('/', authenticateAdmin, async (req, res) => {
     try {
         const admins = await Admin.getAll();
         res.status(200).json(admins);
@@ -32,7 +33,7 @@ router.get('/', async (req, res) => {
 });
 
 // Get admin by ID
-router.get('/:id', async (req, res) => {
+router.get('/:id', authenticateAdmin, async (req, res) => {
     try {
         const admin = await Admin.getById(req.params.id);
         res.json(admin);
@@ -43,7 +44,7 @@ router.get('/:id', async (req, res) => {
 
 
 // Update admin
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateAdmin, async (req, res) => {
     try {
         await Admin.updateById(req.params.id, req.body);
         const updatedAdmin = await Admin.getById(req.params.id);
@@ -54,7 +55,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete admin
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateAdmin, async (req, res) => {
     try {
         await Admin.deleteById(req.params.id);
         res.json({ message: 'Admin deleted successfully' });

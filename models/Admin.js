@@ -2,8 +2,20 @@ const { pool } = require('../database');
 const bcrypt = require('bcrypt');
 
 const Admin = {
+
+    getByEmailOrUsername: (email, username) => {
+        return new Promise((resolve, reject) => {
+            pool.query('SELECT * FROM admins WHERE Email = ? OR Username = ?', [email, username], (error, results, fields) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(results[0]);
+                }
+            });
+        });
+    },
     // Get admin by username
-    getByUsername: (username) => {
+    /*getByUsername: (username) => {
         return new Promise((resolve, reject) => {
             pool.query('SELECT * FROM admins WHERE Username = ?', username, (error, results, fields) => {
                 if (error) {
@@ -13,7 +25,7 @@ const Admin = {
                 }
             });
         });
-    },
+    },*/
     // Create a new admin
     create: async (adminData) => {
         try {
