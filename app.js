@@ -1,9 +1,11 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 
+
 // Import controllers
 const usersController = require('./controllers/usersController');
 const adminsController = require('./controllers/adminsController');
+const Admin = require('./models/Admin'); // Import your Admin model
 const authenticateAdmin = require('./middleware/authMiddleware'); // Import authMiddleware
 
 const app = express();
@@ -16,8 +18,14 @@ app.use('/users', usersController);
 app.use('/admins', adminsController);
 
 // Example route with admin authentication
-app.post('/admin/login', authenticateAdmin, (req, res) => {
-    res.json({ message: 'Authentication successful', admin: req.admin });
+app.post('/admin/login', authenticateAdmin, async (req, res) => {
+    try {
+        await Admin.updateLastLogin(req.admin.id);
+        res.json({ message: 'Authentication successful', admin: req.admin });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('An error occurred');
+    }
 });
 
 // Example protected route
