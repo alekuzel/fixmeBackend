@@ -21,6 +21,24 @@ router.post('/', authenticateAdmin, async (req, res) => {
     }
 });  
 
+// Create a new admin
+router.post('/register', async (req, res) => {
+    const adminData = req.body;
+    
+    // Validate required fields
+    if (!adminData.firstName || !adminData.lastName || !adminData.password) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    try {
+        const result = await Admin.create(adminData);
+        res.status(201).json({ message: 'Admin created successfully', admin: result });
+    } catch (error) {
+        console.error('Error creating admin:', error);
+        return res.status(500).json({ error: 'Error creating admin' });
+    }
+});
+
 // Get all admins
 router.get('/', authenticateAdmin, async (req, res) => {
     try {
@@ -69,3 +87,7 @@ module.exports = router;
 
 
 
+//LAST LOGIN TIME, --> ASK CHATGPT
+//TOKEN AND/OR PASSPORT.JS
+//CREATE SIMPLE FRONTEND TO TEST HOW IT WOTKS NOW
+//THEN PROCEED WITH FUNCTIONALITIES FOR DIFFERENT TYPES OF ADMINS

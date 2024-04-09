@@ -81,7 +81,7 @@ const Admin = {
 
     getById: (id) => {
         return new Promise((resolve, reject) => {
-            pool.query('SELECT * FROM admins WHERE id = ?', id, (error, results, fields) => {
+            pool.query('SELECT *, UNIX_TIMESTAMP(lastLogin) as lastLogin FROM admins WHERE id = ?', id, (error, results, fields) => {
                 if (error) {
                     reject(error);
                 } else {
@@ -112,6 +112,19 @@ const Admin = {
     deleteById: (id) => {
         return new Promise((resolve, reject) => {
             pool.query('DELETE FROM admins WHERE id = ?', id, (error, results, fields) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(results);
+                }
+            });
+        });
+    },
+
+    // Update last login time
+    updateLastLogin: (id) => {
+        return new Promise((resolve, reject) => {
+            pool.query('UPDATE admins SET lastLogin = CURRENT_TIMESTAMP WHERE id = ?', id, (error, results, fields) => {
                 if (error) {
                     reject(error);
                 } else {
