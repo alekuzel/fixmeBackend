@@ -54,6 +54,7 @@ const adminsTableSchema = `
                     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                     lastLogin DATETIME,
+                    image VARCHAR(255),
                     status ENUM('active', 'inactive', 'suspended'),
                     lastLoginip VARCHAR(45),
                     MFAEnabled BOOLEAN
