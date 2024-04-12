@@ -2,9 +2,12 @@ const express = require('express');
 const Admin = require('../models/Admin'); // Import your Admin model
 const authenticateAdmin = require('../middleware/authMiddleware'); // Import the authenticateAdmin middleware
 const router = express.Router();
+const multer = require('multer');
+const upload = multer();
 
 // Create a new admin
 router.post('/', authenticateAdmin, async (req, res) => {
+    
     const adminData = req.body;
     
     // Validate required fields
@@ -22,7 +25,8 @@ router.post('/', authenticateAdmin, async (req, res) => {
 });  
 
 // Create a new admin
-router.post('/register', async (req, res) => {
+router.post('/register', upload.none(), async (req, res) => {
+    console.log(req.body); // Add this line
     const adminData = req.body;
     
     // Validate required fields
