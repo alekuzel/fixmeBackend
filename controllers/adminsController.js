@@ -3,7 +3,35 @@ const Admin = require('../models/Admin'); // Import your Admin model
 const authenticateAdmin = require('../middleware/authMiddleware'); // Import the authenticateAdmin middleware
 const router = express.Router();
 const multer = require('multer');
-const upload = multer();
+
+const storage = multer.diskStorage({
+    destination: function(req, file, cb) {
+        cb(null, './uploads/admins/');
+    },
+    filename: function(req, file, cb) {
+        cb(null, new Date().toISOString().replace(/:/g, '-') + file.originalname);
+    }
+});
+
+const upload = multer({ storage: storage });
+
+// Upload admin image
+router.post('/:id/upload', upload.single('image'), async (req, res) => {
+    try {
+        const admin = await Admin.getById(req.params.id);
+        if (!admin) {
+            return res.status(404).json({ message: 'Admin not found' });
+        }
+        admin.image = req.file.path;
+        await admin.save();
+        res.json({ message: 'Image uploaded successfully', admin });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+
+
 
 // Create a new admin
 router.post('/', authenticateAdmin, async (req, res) => {
