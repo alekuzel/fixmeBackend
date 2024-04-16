@@ -3,6 +3,8 @@ const Admin = require('../models/Admin'); // Import your Admin model
 const authenticateAdmin = require('../middleware/authMiddleware'); // Import the authenticateAdmin middleware
 const router = express.Router();
 const multer = require('multer');
+const { sendConfirmationEmail } = require('../utils/email'); // Import function to send confirmation email
+
 
 const storage = multer.diskStorage({
     destination: function(req, file, cb) {
@@ -53,18 +55,23 @@ router.post('/', authenticateAdmin, async (req, res) => {
 });  
 
 // Create a new admin
+// Create a new admin with email confirmation
 router.post('/register', upload.none(), async (req, res) => {
-    console.log(req.body); // Add this line
     const adminData = req.body;
     
     // Validate required fields
-    if (!adminData.firstName || !adminData.lastName || !adminData.password) {
+    if (!adminData.firstName || !adminData.lastName || !adminData.password || !adminData.email) {
         return res.status(400).json({ error: 'Missing required fields' });
     }
 
     try {
+        // Create a new admin record in the database
         const result = await Admin.create(adminData);
-        res.status(201).json({ message: 'Admin created successfully', admin: result });
+
+        // Send confirmation email
+        await sendConfirmationEmail(adminData.email); // Call function to send confirmation email
+
+        res.status(201).json({ message: 'Admin created successfully. Confirmation email sent.', admin: result });
     } catch (error) {
         console.error('Error creating admin:', error);
         return res.status(500).json({ error: 'Error creating admin' });
