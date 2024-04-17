@@ -2,7 +2,7 @@ const sgMail = require('@sendgrid/mail');
 const crypto = require('crypto');
 
 // Set your SendGrid API key
-sgMail.setApiKey('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');
+sgMail.setApiKey('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');
 
 const generateUniqueToken = () => {
     return crypto.randomBytes(20).toString('hex'); // Generate a random token (you can adjust the length as needed)
