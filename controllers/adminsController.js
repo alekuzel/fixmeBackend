@@ -74,7 +74,7 @@ router.post('/register', upload.none(), async (req, res) => {
         res.status(201).json({ message: 'Admin created successfully. Confirmation email sent.', admin: result });
     } catch (error) {
         console.error('Error creating admin:', error);
-        return res.status(500).json({ error: 'Error creating admin' });
+        return res.status(500).json({ error: error.message });
     }
 });
 
