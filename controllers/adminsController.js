@@ -1,10 +1,10 @@
 const express = require('express');
-const Admin = require('../models/Admin'); // Import your Admin model
-const authenticateAdmin = require('../middleware/authMiddleware'); // Import the authenticateAdmin middleware
+const Admin = require('../models/Admin');
+const authenticateAdmin = require('../middleware/authMiddleware');
 const router = express.Router();
 const multer = require('multer');
-const { sendConfirmationEmail } = require('../utils/email'); // Import function to send confirmation email
-
+const { sendConfirmationEmail } = require('../utils/email');
+const { v4: uuidv4 } = require('uuid'); // Import UUID generator
 
 const storage = multer.diskStorage({
     destination: function(req, file, cb) {
@@ -32,44 +32,24 @@ router.post('/:id/upload', upload.single('image'), async (req, res) => {
     }
 });
 
-
-
-
-// Create a new admin
-router.post('/', authenticateAdmin, async (req, res) => {
-    
-    const adminData = req.body;
-    
-    // Validate required fields
-    if (!adminData.firstName || !adminData.lastName || !adminData.password) {
-        return res.status(400).json({ error: 'Missing required fields' });
-    }
-
-    try {
-        const result = await Admin.create(adminData);
-        res.status(201).json({ message: 'Admin created successfully', admin: result });
-    } catch (error) {
-        console.error('Error creating admin:', error);
-        return res.status(500).json({ error: 'Error creating admin' });
-    }
-});  
-
-// Create a new admin
 // Create a new admin with email confirmation
 router.post('/register', upload.none(), async (req, res) => {
     const adminData = req.body;
-    
+
     // Validate required fields
     if (!adminData.firstName || !adminData.lastName || !adminData.password || !adminData.email) {
         return res.status(400).json({ error: 'Missing required fields' });
     }
 
     try {
-        // Create a new admin record in the database
-        const result = await Admin.create(adminData);
+        // Generate UUID for API key
+        const apiKey = uuidv4();
 
-        // Send confirmation email
-        await sendConfirmationEmail(adminData.email); // Call function to send confirmation email
+        // Create a new admin record in the database
+        const result = await Admin.create({ ...adminData, apiKey });
+
+        // Send confirmation email with the generated API key
+        await sendConfirmationEmail(adminData.email, apiKey);
 
         res.status(201).json({ message: 'Admin created successfully. Confirmation email sent.', admin: result });
     } catch (error) {
@@ -80,15 +60,15 @@ router.post('/register', upload.none(), async (req, res) => {
 
 // Confirm registration
 router.post('/confirm-registration', async (req, res) => {
-    const { apiKey } = req.body;
+    const { token } = req.body;
 
-    if (!apiKey) {
+    if (!token) {
         return res.status(400).json({ error: 'API key is required' });
     }
 
     try {
         // Check if an admin with the provided API key exists in the database
-        const admin = await Admin.findOne({ apiKey });
+        const admin = await Admin.findOne({ apiKey: token });
 
         if (!admin) {
             return res.status(404).json({ error: 'Admin not found' });
@@ -107,6 +87,8 @@ router.post('/confirm-registration', async (req, res) => {
         return res.status(500).json({ error: 'Failed to confirm registration' });
     }
 });
+
+
 
 
 // Get all admins
