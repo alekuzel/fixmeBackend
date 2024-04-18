@@ -58,6 +58,7 @@ const adminsTableSchema = `
         status ENUM('active', 'inactive', 'suspended'),
         lastLoginip VARCHAR(45),
         MFAEnabled BOOLEAN,
+        apiKey VARCHAR(255) UNIQUE,
         token VARCHAR(255) UNIQUE
     )
 `;

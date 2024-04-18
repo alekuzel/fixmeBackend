@@ -32,6 +32,7 @@ router.post('/:id/upload', upload.single('image'), async (req, res) => {
     }
 });
 
+
 // Create a new admin with email confirmation
 router.post('/register', upload.none(), async (req, res) => {
     const adminData = req.body;
@@ -45,11 +46,14 @@ router.post('/register', upload.none(), async (req, res) => {
         // Generate UUID for API key
         const apiKey = uuidv4();
 
-        // Create a new admin record in the database
-        const result = await Admin.create({ ...adminData, apiKey });
+        // Generate a confirmation token
+        const token = uuidv4();
 
-        // Send confirmation email with the generated API key
-        await sendConfirmationEmail(adminData.email, apiKey);
+        // Create a new admin record in the database
+        const result = await Admin.create({ ...adminData, apiKey, token });
+
+        // Send confirmation email with the generated confirmation token
+        await sendConfirmationEmail(adminData.email, token);
 
         res.status(201).json({ message: 'Admin created successfully. Confirmation email sent.', admin: result });
     } catch (error) {
@@ -58,17 +62,40 @@ router.post('/register', upload.none(), async (req, res) => {
     }
 });
 
+// Backend route to fetch support admins
+router.get('/support', async (req, res) => {
+    try {
+        // Fetch admins with role equal to "support"
+        const supportAdmins = await Admin.getByRole('support');
+        res.status(200).json(supportAdmins);
+    } catch (error) {
+        console.error('Error fetching support admins:', error);
+        return res.status(500).json({ error: 'Error fetching support admins' });
+    }
+});
+
+// Backend route to fetch support admins
+router.get('/admins', async (req, res) => {
+    try {
+        // Fetch admins with role equal to "support"
+        const admins = await Admin.getByRole('admin');
+        res.status(200).json(admins);
+    } catch (error) {
+        console.error('Error fetching admins:', error);
+        return res.status(500).json({ error: 'Error fetching admins' });
+    }
+});
 // Confirm registration
 router.post('/confirm-registration', async (req, res) => {
     const { token } = req.body;
 
     if (!token) {
-        return res.status(400).json({ error: 'API key is required' });
+        return res.status(400).json({ error: 'Token is required' });
     }
 
     try {
         // Check if an admin with the provided API key exists in the database
-        const admin = await Admin.findOne({ apiKey: token });
+        const admin = await Admin.findOne({ token: token });
 
         if (!admin) {
             return res.status(404).json({ error: 'Admin not found' });

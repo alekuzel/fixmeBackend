@@ -41,9 +41,23 @@ const Admin = {
     },
 
 
+    getByRole: (role) => {
+        return new Promise((resolve, reject) => {
+            pool.query('SELECT * FROM admins WHERE role = ?', role, (error, results, fields) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(results);
+                }
+            });
+        });
+    },
+    
+
 
     // Create a new admin
-  create: async (adminData) => {
+// Create a new admin
+create: async (adminData) => {
     try {
         const firstNamePrefix = adminData.firstName.slice(0, 3).toLowerCase();
         const lastNamePrefix = adminData.lastName.slice(0, 3).toLowerCase();
@@ -63,7 +77,8 @@ const Admin = {
         }
 
         adminData.Username = username;
-        adminData.token = uuid.v4(); // Generate a new apiKey for each admin
+        adminData.apiKey = uuid.v4(); // Generate a new apiKey for each admin
+        adminData.token= uuid.v4(); // Generate a new confirmation token for each admin
 
         const hashedPassword = await hashPassword(adminData.password);
         adminData.password = hashedPassword;
@@ -81,7 +96,6 @@ const Admin = {
         throw error;
     }
 },
-
     // Get all admins
     getAll: () => {
         return new Promise((resolve, reject) => {
