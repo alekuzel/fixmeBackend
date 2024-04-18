@@ -119,7 +119,7 @@ router.post('/confirm-registration', async (req, res) => {
 
 
 // Get all admins
-router.get('/', authenticateAdmin, async (req, res) => {
+router.get('/', async (req, res) => {
     try {
         const admins = await Admin.getAll();
         res.status(200).json(admins);
@@ -130,7 +130,7 @@ router.get('/', authenticateAdmin, async (req, res) => {
 });
 
 // Get admin by ID
-router.get('/:id', authenticateAdmin, async (req, res) => {
+router.get('/:id', async (req, res) => {
     try {
         const admin = await Admin.getById(req.params.id);
         res.json(admin);

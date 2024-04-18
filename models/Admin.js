@@ -54,8 +54,6 @@ const Admin = {
     },
     
 
-
-    // Create a new admin
 // Create a new admin
 create: async (adminData) => {
     try {
