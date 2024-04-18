@@ -80,22 +80,34 @@ router.post('/register', upload.none(), async (req, res) => {
 
 // Confirm registration
 router.post('/confirm-registration', async (req, res) => {
-    const { token } = req.body;
+    const { apiKey } = req.body;
 
-    if (!token) {
-        return res.status(400).json({ error: 'Token is required' });
+    if (!apiKey) {
+        return res.status(400).json({ error: 'API key is required' });
     }
 
     try {
-        // Your logic to verify and confirm registration with the token
-        // This could involve updating the user's record in the database, marking them as confirmed, etc.
-        // Once confirmed, send a success response
+        // Check if an admin with the provided API key exists in the database
+        const admin = await Admin.findOne({ apiKey });
+
+        if (!admin) {
+            return res.status(404).json({ error: 'Admin not found' });
+        }
+
+        // Update the status to 'active' to indicate confirmed registration
+        admin.status = 'active';
+
+        // Save the updated admin record
+        await admin.save();
+
+        // Send a success response
         res.status(200).json({ message: 'Registration confirmed successfully' });
     } catch (error) {
         console.error('Error confirming registration:', error);
         return res.status(500).json({ error: 'Failed to confirm registration' });
     }
 });
+
 
 // Get all admins
 router.get('/', authenticateAdmin, async (req, res) => {

@@ -41,25 +41,26 @@ CREATE TABLE IF NOT EXISTS login_history (
 
 // Define schema for admins table
 const adminsTableSchema = `
-                CREATE TABLE IF NOT EXISTS admins (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    firstName VARCHAR(255),
-                    lastName VARCHAR(255),
-                    username VARCHAR(255) UNIQUE,
-                    email VARCHAR(255) UNIQUE,
-                    twoFactorEnabled BOOLEAN,
-                    phoneNumber VARCHAR(20),
-                    password VARCHAR(255),
-                    role ENUM('superadmin', 'admin', 'support'),
-                    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                    lastLogin DATETIME,
-                    image VARCHAR(255),
-                    status ENUM('active', 'inactive', 'suspended'),
-                    lastLoginip VARCHAR(45),
-                    MFAEnabled BOOLEAN
-                )
-            `;
+    CREATE TABLE IF NOT EXISTS admins (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        firstName VARCHAR(255),
+        lastName VARCHAR(255),
+        username VARCHAR(255) UNIQUE,
+        email VARCHAR(255) UNIQUE,
+        twoFactorEnabled BOOLEAN,
+        phoneNumber VARCHAR(20),
+        password VARCHAR(255),
+        role ENUM('superadmin', 'admin', 'support'),
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        lastLogin DATETIME,
+        image VARCHAR(255),
+        status ENUM('active', 'inactive', 'suspended'),
+        lastLoginip VARCHAR(45),
+        MFAEnabled BOOLEAN,
+        token VARCHAR(255) UNIQUE
+    )
+`;
 
 // Define schema for categories table
 const categoriesTableSchema = `

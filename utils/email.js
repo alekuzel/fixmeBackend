@@ -8,9 +8,9 @@ const generateUniqueToken = () => {
     return crypto.randomBytes(20).toString('hex'); // Generate a random token (you can adjust the length as needed)
 };
 
-const sendConfirmationEmail = async (email) => {
+const sendConfirmationEmail = async (email, apiKey) => {
     const token = generateUniqueToken();
-    const confirmationLink = `http://localhost:3000/confirm?token=${token}`; // Using your local development URL
+    const confirmationLink = `http://localhost:3000/confirm?token=${token}`; // Use the generated token
 
     const msg = {
         to: email,
@@ -29,3 +29,7 @@ const sendConfirmationEmail = async (email) => {
 };
 
 module.exports = { sendConfirmationEmail };
+
+
+
+  
