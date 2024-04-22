@@ -85,6 +85,7 @@ router.get('/admins', async (req, res) => {
         return res.status(500).json({ error: 'Error fetching admins' });
     }
 });
+
 // Confirm registration
 router.post('/confirm-registration', async (req, res) => {
     const { token } = req.body;
@@ -140,14 +141,17 @@ router.get('/:id', async (req, res) => {
 });
 
 
-// Update admin
-router.put('/:id', authenticateAdmin, async (req, res) => {
+// Update a user by ID
+router.put('/:id', async (req, res) => {
     try {
-        await Admin.updateById(req.params.id, req.body);
-        const updatedAdmin = await Admin.getById(req.params.id);
-        res.json(updatedAdmin);
+        const user = await User.updateById(req.params.id, req.body, { new: true, runValidators: true });
+        if (!user) {
+            return res.status(404).send();
+        }
+        res.send(user);
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        console.log(err); // Add this line
+        res.status(400).send(err);
     }
 });
 

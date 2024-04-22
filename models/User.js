@@ -1,57 +1,152 @@
-// Import the database connection pool
-const pool = require('../database');
+const { pool } = require('../database');
+const bcrypt = require('bcrypt');
+const uuid = require('uuid');
 
-// User model
 const User = {
-    // Function to create a new user
-    create: (userData, callback) => {
-        pool.query('INSERT INTO users SET ?', userData, (error, results, fields) => {
-            if (error) {
-                return callback(error);
-            }
-            callback(null, results);
+
+    getByEmailOrUsername: (email, username) => {
+        return new Promise((resolve, reject) => {
+            pool.query('SELECT * FROM users WHERE email = ? OR username = ?', [email, username], (error, results, fields) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(results[0]);
+                }
+            });
         });
     },
 
-    // Function to get all users
-    getAll: (callback) => {
-        pool.query('SELECT * FROM users', (error, results, fields) => {
-            if (error) {
-                return callback(error);
-            }
-            callback(null, results);
+    findOne: (identifier) => {
+        return new Promise((resolve, reject) => {
+            pool.query('SELECT * FROM users WHERE email = ? OR username = ?', [identifier, identifier], (error, results, fields) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(results[0]);
+                }
+            });
         });
     },
 
-    // Function to get a user by ID
-    getById: (userId, callback) => {
-        pool.query('SELECT * FROM users WHERE id = ?', userId, (error, results, fields) => {
-            if (error) {
-                return callback(error);
-            }
-            callback(null, results[0]);
+    getByUsername: (username) => {
+        return new Promise((resolve, reject) => {
+            pool.query('SELECT * FROM users WHERE username = ?', username, (error, results, fields) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(results[0]);
+                }
+            });
         });
     },
 
-    // Function to update a user by ID
-    updateById: (userId, userData, callback) => {
-        pool.query('UPDATE users SET ? WHERE id = ?', [userData, userId], (error, results, fields) => {
-            if (error) {
-                return callback(error);
+    create: async (userData) => {
+
+        try {
+            const firstNamePrefix = userData.firstName.slice(0, 3).toLowerCase();
+            const lastNamePrefix = userData.lastName.slice(0, 3).toLowerCase();
+    
+            let username = `${firstNamePrefix}${lastNamePrefix}`;
+    
+            let isUnique = false;
+            let suffix = 1;
+            while (!isUnique) {
+                const existingUser = await User.getByUsername(username);
+                if (!existingUser) {
+                    isUnique = true;
+                } else {
+                    suffix++;
+                    username = `${firstNamePrefix}${lastNamePrefix}${suffix}`;
+                }
             }
-            callback(null, results);
+    
+            userData.Username = username;
+          
+    
+            const hashedPassword = await hashPassword(userData.passwordHash);
+            userData.passwordHash = hashedPassword;
+    
+            return new Promise((resolve, reject) => {
+                pool.query('INSERT INTO users SET ?', userData, (error, results, fields) => {
+                    if (error) {
+                        reject(error);
+                    } else {
+                        resolve(results);
+                    }
+                });
+            });
+        } catch (error) {
+            throw error;
+        }
+
+    },
+
+    getAll: () => {
+        return new Promise((resolve, reject) => {
+            pool.query('SELECT * FROM users', (error, results, fields) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(results);
+                }
+            });
         });
     },
 
-    // Function to delete a user by ID
-    deleteById: (userId, callback) => {
-        pool.query('DELETE FROM users WHERE id = ?', userId, (error, results, fields) => {
-            if (error) {
-                return callback(error);
-            }
-            callback(null, results);
+    getById: (id) => {
+        return new Promise((resolve, reject) => {
+            pool.query('SELECT * FROM users WHERE id = ?', id, (error, results, fields) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    if (results.length === 0) {
+                        reject(new Error('No user found with this id'));
+                    } else {
+                        resolve(results[0]);
+                    }
+                }
+            });
         });
-    }
+    },
+
+    updateById: (id, userData) => {
+        return new Promise(async (resolve, reject) => {
+            // Check if the new email already exists in the database
+            const existingUser = await User.getByEmailOrUsername(userData.email, userData.username);
+            if (existingUser && existingUser.id !== id) {
+                reject(new Error('Email already in use'));
+            } else {
+                pool.query('UPDATE users SET ? WHERE id = ?', [userData, id], (error, results, fields) => {
+                    if (error) {
+                        reject(error);
+                    } else {
+                        resolve(results);
+                    }
+                });
+            }
+        });
+    },
+
+    deleteById: (id) => {
+        return new Promise((resolve, reject) => {
+            pool.query('DELETE FROM users WHERE id = ?', id, (error, results, fields) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(results);
+                }
+            });
+        });
+    },
+
+    updateLastLogin: (id) => {
+        // Similar to Admin.updateLastLogin, but interacts with the users table. guess it will go be managed in the activity log table, but leave this empty function here just in case
+    },
+};
+
+const hashPassword = async (passwordHash) => {
+    const saltRounds = 10;
+    return await bcrypt.hash(passwordHash, saltRounds);
 };
 
 module.exports = User;

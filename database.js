@@ -14,11 +14,12 @@ const pool = mysql.createPool({
 // Users Table Schema
 const usersTableSchema = `
 CREATE TABLE IF NOT EXISTS users (
-    userID INT AUTO_INCREMENT PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(255) UNIQUE NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     passwordHash VARCHAR(255) NOT NULL,
-    fullName VARCHAR(255) NOT NULL,
+    firstName VARCHAR(255) NOT NULL,
+    lastName VARCHAR(255) NOT NULL,
     phoneNumber VARCHAR(20),
     profilePictureURL VARCHAR(255),
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -44,12 +45,12 @@ CREATE TABLE IF NOT EXISTS services (
 const userActivityLogTableSchema = `
 CREATE TABLE IF NOT EXISTS userActivityLog (
     activityLogID INT AUTO_INCREMENT PRIMARY KEY,
-    userID INT NOT NULL,
+    id INT NOT NULL,
     ipAddress VARCHAR(45) NOT NULL,
     activityType ENUM('login', 'signup', 'transaction') NOT NULL,
     activityDetails TEXT,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (userID) REFERENCES users(userID)
+    FOREIGN KEY (id) REFERENCES users(id)
 )
 `;
 
@@ -57,11 +58,11 @@ CREATE TABLE IF NOT EXISTS userActivityLog (
 const userLocationTableSchema = `
 CREATE TABLE IF NOT EXISTS userLocations (
     locationID INT AUTO_INCREMENT PRIMARY KEY,
-    userID INT NOT NULL,
+    id INT NOT NULL,
     latitude FLOAT NOT NULL,
     longitude FLOAT NOT NULL,
     description VARCHAR(255),
-    FOREIGN KEY (userID) REFERENCES users(userID)
+    FOREIGN KEY (id) REFERENCES users(id)
 )
 `;
 
@@ -69,11 +70,11 @@ CREATE TABLE IF NOT EXISTS userLocations (
 const userFriendsTableSchema = `
 CREATE TABLE IF NOT EXISTS userFriends (
     friendshipID INT AUTO_INCREMENT PRIMARY KEY,
-    userID INT NOT NULL,
-    friendUserID INT NOT NULL,
+    id INT NOT NULL,
+    friendid INT NOT NULL,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (userID) REFERENCES users(userID),
-    FOREIGN KEY (friendUserID) REFERENCES users(userID)
+    FOREIGN KEY (id) REFERENCES users(id),
+    FOREIGN KEY (friendid) REFERENCES users(id)
 )
 `;
 
@@ -81,10 +82,10 @@ CREATE TABLE IF NOT EXISTS userFriends (
 const userPreferencesTableSchema = `
 CREATE TABLE IF NOT EXISTS userPreferences (
     preferenceID INT AUTO_INCREMENT PRIMARY KEY,
-    userID INT NOT NULL,
+    id INT NOT NULL,
     preferenceType VARCHAR(255) NOT NULL,
     preferenceValue TEXT NOT NULL,
-    FOREIGN KEY (userID) REFERENCES users(userID)
+    FOREIGN KEY (id) REFERENCES users(id)
 )
 `;
 
@@ -93,9 +94,9 @@ CREATE TABLE IF NOT EXISTS userPreferences (
 const privacySettingsTableSchema = `
 CREATE TABLE IF NOT EXISTS privacySettings (
     privacySettingID INT AUTO_INCREMENT PRIMARY KEY,
-    userID INT NOT NULL,
+    id INT NOT NULL,
     shareActivityWithFriends BOOLEAN NOT NULL,
-    FOREIGN KEY (userID) REFERENCES users(userID)
+    FOREIGN KEY (id) REFERENCES users(id)
 )
 `;
 
@@ -136,16 +137,16 @@ CREATE TABLE IF NOT EXISTS categories (
 const bookingsTableSchema = `
 CREATE TABLE IF NOT EXISTS bookings (
     bookingID INT AUTO_INCREMENT PRIMARY KEY,
-    userID INT,
+    id INT,
     serviceID INT,
     providerID INT,
     scheduledTime TIMESTAMP,
     status ENUM('pending', 'confirmed', 'completed', 'canceled'),
     price DECIMAL(10, 2),
     duration INT,
-    FOREIGN KEY (userID) REFERENCES users(userID),
+    FOREIGN KEY (id) REFERENCES users(id),
     FOREIGN KEY (serviceID) REFERENCES services(id),
-    FOREIGN KEY (providerID) REFERENCES users(userID)
+    FOREIGN KEY (providerID) REFERENCES users(id)
 )
 `;
 
@@ -153,15 +154,15 @@ CREATE TABLE IF NOT EXISTS bookings (
 const userHistoryTableSchema = `
 CREATE TABLE IF NOT EXISTS userHistory (
     historyID INT AUTO_INCREMENT PRIMARY KEY,
-    userID INT NOT NULL,
+    id INT NOT NULL,
     serviceID INT NOT NULL,
     providerID INT NOT NULL,
     appointmentDate TIMESTAMP NOT NULL,
     duration INT NOT NULL,
     status ENUM('completed', 'canceled') NOT NULL,
-    FOREIGN KEY (userID) REFERENCES users(userID),
+    FOREIGN KEY (id) REFERENCES users(id),
     FOREIGN KEY (serviceID) REFERENCES services(id),
-    FOREIGN KEY (providerID) REFERENCES users(userID)
+    FOREIGN KEY (providerID) REFERENCES users(id)
 )
 `;
 
@@ -171,15 +172,15 @@ CREATE TABLE IF NOT EXISTS userHistory (
 const ratingsTableSchema = `
 CREATE TABLE IF NOT EXISTS ratings (
     ratingID INT AUTO_INCREMENT PRIMARY KEY,
-    userID INT NOT NULL,
+    id INT NOT NULL,
     serviceID INT NOT NULL,
     providerID INT NOT NULL,
     rating INT NOT NULL,
     review TEXT,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (userID) REFERENCES users(userID),
+    FOREIGN KEY (id) REFERENCES users(id),
     FOREIGN KEY (serviceID) REFERENCES services(id),
-    FOREIGN KEY (providerID) REFERENCES users(userID)
+    FOREIGN KEY (providerID) REFERENCES users(id)
 )
 `;
 
@@ -218,3 +219,4 @@ const createTables = async () => {
 
 // Optionally, call createTables() to initialize all tables when the module is required.
 createTables();
+module.exports = { pool };

@@ -2,67 +2,64 @@ const express = require('express');
 const User = require('../models/User');
 const router = express.Router();
 
-// Create a new user
-router.post('/', (req, res) => {
-    const userData = req.body;
-    User.create(userData, (error, result) => {
-        if (error) {
-            console.error('Error creating user:', error);
-            return res.status(500).json({ error: 'Error creating user' });
-        }
-        res.status(201).json({ message: 'User created successfully', user: result });
-    });
+
+router.post('/', async (req, res) => {
+    try {
+        const result = await User.create(req.body);
+        res.status(201).send(result);
+    } catch (error) {
+        res.status(500).send(error.message);
+    }
 });
 
 // Get all users
-router.get('/', (req, res) => {
-    User.getAll((error, users) => {
-        if (error) {
-            console.error('Error fetching users:', error);
-            return res.status(500).json({ error: 'Error fetching users' });
-        }
-        res.status(200).json(users);
-    });
+router.get('/', async (req, res) => {
+    try {
+        const users = await User.getAll({});
+        res.send(users);
+    } catch (err) {
+        res.status(500).send(err);
+    }
 });
 
 // Get a user by ID
-router.get('/:id', (req, res) => {
-    const userId = req.params.id;
-    User.getById(userId, (error, user) => {
-        if (error) {
-            console.error('Error fetching user:', error);
-            return res.status(500).json({ error: 'Error fetching user' });
-        }
+router.get('/:id', async (req, res) => {
+    const _id = req.params.id;
+    try {
+        const user = await User.getById(_id);
         if (!user) {
-            return res.status(404).json({ error: 'User not found' });
+            return res.status(404).send();
         }
-        res.status(200).json(user);
-    });
+        res.send(user);
+    } catch (err) {
+        res.status(500).send(err);
+    }
 });
 
 // Update a user by ID
-router.put('/:id', (req, res) => {
-    const userId = req.params.id;
-    const userData = req.body;
-    User.updateById(userId, userData, (error, result) => {
-        if (error) {
-            console.error('Error updating user:', error);
-            return res.status(500).json({ error: 'Error updating user' });
+router.put('/:id', async (req, res) => {
+    try {
+        const user = await User.updateById(req.params.id, req.body, { new: true, runValidators: true });
+        if (!user) {
+            return res.status(404).send();
         }
-        res.status(200).json({ message: 'User updated successfully' });
-    });
+        res.send(user);
+    } catch (err) {
+        res.status(400).send(err);
+    }
 });
 
 // Delete a user by ID
-router.delete('/:id', (req, res) => {
-    const userId = req.params.id;
-    User.deleteById(userId, (error, result) => {
-        if (error) {
-            console.error('Error deleting user:', error);
-            return res.status(500).json({ error: 'Error deleting user' });
+router.delete('/:id', async (req, res) => {
+    try {
+        const user = await User.deleteById(req.params.id);
+        if (!user) {
+            return res.status(404).send();
         }
-        res.status(200).json({ message: 'User deleted successfully' });
-    });
+        res.send(user);
+    } catch (err) {
+        res.status(500).send(err);
+    }
 });
 
 module.exports = router;
