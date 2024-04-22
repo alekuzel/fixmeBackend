@@ -11,31 +11,91 @@ const pool = mysql.createPool({
     port: 3310
 });
 
-// Define schema for users table
+// Users Table Schema
 const usersTableSchema = `
 CREATE TABLE IF NOT EXISTS users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    firstName VARCHAR(255) NOT NULL,
-    lastName VARCHAR(255) NOT NULL,
+    userID INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(255) UNIQUE NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    passwordHash VARCHAR(255) NOT NULL,
+    fullName VARCHAR(255) NOT NULL,
     phoneNumber VARCHAR(20),
-    age INT,
-    email VARCHAR(255) NOT NULL UNIQUE,
-    image VARCHAR(255),
-    password VARCHAR(255) NOT NULL, 
+    profilePictureURL VARCHAR(255),
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    language VARCHAR(255),
+    timeZone VARCHAR(255)
 )
 `;
 
-// Define schema for login history table
-const loginHistoryTableSchema = `
-CREATE TABLE IF NOT EXISTS login_history (
+const servicesTableSchema = `
+CREATE TABLE IF NOT EXISTS services (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    userId INT,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    price DECIMAL(10, 2) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+)
+`;
+
+
+// User Activity Log Table Schema
+const userActivityLogTableSchema = `
+CREATE TABLE IF NOT EXISTS userActivityLog (
+    activityLogID INT AUTO_INCREMENT PRIMARY KEY,
+    userID INT NOT NULL,
     ipAddress VARCHAR(45) NOT NULL,
-    loginTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    isSuccess BOOLEAN,
-    FOREIGN KEY (userId) REFERENCES users(id)
+    activityType ENUM('login', 'signup', 'transaction') NOT NULL,
+    activityDetails TEXT,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (userID) REFERENCES users(userID)
+)
+`;
+
+// User Location Table Schema
+const userLocationTableSchema = `
+CREATE TABLE IF NOT EXISTS userLocations (
+    locationID INT AUTO_INCREMENT PRIMARY KEY,
+    userID INT NOT NULL,
+    latitude FLOAT NOT NULL,
+    longitude FLOAT NOT NULL,
+    description VARCHAR(255),
+    FOREIGN KEY (userID) REFERENCES users(userID)
+)
+`;
+
+// User Friends Table Schema
+const userFriendsTableSchema = `
+CREATE TABLE IF NOT EXISTS userFriends (
+    friendshipID INT AUTO_INCREMENT PRIMARY KEY,
+    userID INT NOT NULL,
+    friendUserID INT NOT NULL,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (userID) REFERENCES users(userID),
+    FOREIGN KEY (friendUserID) REFERENCES users(userID)
+)
+`;
+
+// User Preferences Table Schema
+const userPreferencesTableSchema = `
+CREATE TABLE IF NOT EXISTS userPreferences (
+    preferenceID INT AUTO_INCREMENT PRIMARY KEY,
+    userID INT NOT NULL,
+    preferenceType VARCHAR(255) NOT NULL,
+    preferenceValue TEXT NOT NULL,
+    FOREIGN KEY (userID) REFERENCES users(userID)
+)
+`;
+
+
+// Privacy Settings Table Schema
+const privacySettingsTableSchema = `
+CREATE TABLE IF NOT EXISTS privacySettings (
+    privacySettingID INT AUTO_INCREMENT PRIMARY KEY,
+    userID INT NOT NULL,
+    shareActivityWithFriends BOOLEAN NOT NULL,
+    FOREIGN KEY (userID) REFERENCES users(userID)
 )
 `;
 
@@ -63,6 +123,8 @@ const adminsTableSchema = `
     )
 `;
 
+
+
 // Define schema for categories table
 const categoriesTableSchema = `
 CREATE TABLE IF NOT EXISTS categories (
@@ -71,50 +133,88 @@ CREATE TABLE IF NOT EXISTS categories (
 )
 `;
 
-// Define schema for services table
-const servicesTableSchema = `
-CREATE TABLE IF NOT EXISTS services (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    description TEXT,
-    categoryId INT,
-    FOREIGN KEY (categoryId) REFERENCES categories(id)
+const bookingsTableSchema = `
+CREATE TABLE IF NOT EXISTS bookings (
+    bookingID INT AUTO_INCREMENT PRIMARY KEY,
+    userID INT,
+    serviceID INT,
+    providerID INT,
+    scheduledTime TIMESTAMP,
+    status ENUM('pending', 'confirmed', 'completed', 'canceled'),
+    price DECIMAL(10, 2),
+    duration INT,
+    FOREIGN KEY (userID) REFERENCES users(userID),
+    FOREIGN KEY (serviceID) REFERENCES services(id),
+    FOREIGN KEY (providerID) REFERENCES users(userID)
 )
 `;
 
-// Execute table creation queries
-pool.query(usersTableSchema, (err, results) => {
-    if (err) throw err;
-    console.log('Users table created successfully');
-});
+// User History Table Schema
+const userHistoryTableSchema = `
+CREATE TABLE IF NOT EXISTS userHistory (
+    historyID INT AUTO_INCREMENT PRIMARY KEY,
+    userID INT NOT NULL,
+    serviceID INT NOT NULL,
+    providerID INT NOT NULL,
+    appointmentDate TIMESTAMP NOT NULL,
+    duration INT NOT NULL,
+    status ENUM('completed', 'canceled') NOT NULL,
+    FOREIGN KEY (userID) REFERENCES users(userID),
+    FOREIGN KEY (serviceID) REFERENCES services(id),
+    FOREIGN KEY (providerID) REFERENCES users(userID)
+)
+`;
 
-pool.query(adminsTableSchema, (err, results) => {
-    if (err) throw err;
-    console.log('Admins table created successfully');
-});
 
-pool.query(loginHistoryTableSchema, (err, results) => {
-    if (err) throw err;
-    console.log('Login history table created successfully');
-});
 
-pool.query(categoriesTableSchema, (err, results) => {
-    if (err) throw err;
-    console.log('Categories table created successfully');
-});
+// Ratings Table Schema
+const ratingsTableSchema = `
+CREATE TABLE IF NOT EXISTS ratings (
+    ratingID INT AUTO_INCREMENT PRIMARY KEY,
+    userID INT NOT NULL,
+    serviceID INT NOT NULL,
+    providerID INT NOT NULL,
+    rating INT NOT NULL,
+    review TEXT,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (userID) REFERENCES users(userID),
+    FOREIGN KEY (serviceID) REFERENCES services(id),
+    FOREIGN KEY (providerID) REFERENCES users(userID)
+)
+`;
 
-pool.query(servicesTableSchema, (err, results) => {
-    if (err) throw err;
-    console.log('Services table created successfully');
-});
 
-// Function to hash passwords
-const hashPassword = async (password) => {
-    const saltRounds = 10;
-    return await bcrypt.hash(password, saltRounds);
+const createTables = async () => {
+    const baseTables = [
+        usersTableSchema, // Users table must exist before any references
+        categoriesTableSchema, // Categories must exist before services
+        servicesTableSchema, // Services must exist before ratings, bookings, user history
+    ];
+
+    const dependentTables = [
+        userActivityLogTableSchema, // Depends on users
+        userLocationTableSchema, // Depends on users
+        userFriendsTableSchema, // Depends on users
+        privacySettingsTableSchema, // Depends on users
+        ratingsTableSchema, // Depends on users and services
+        bookingsTableSchema, // Depends on users and services
+        userHistoryTableSchema, // Depends on users and services
+        userPreferencesTableSchema, // Depends on users
+        adminsTableSchema // Admins is independent but kept last for any logical dependencies
+    ];
+
+    const schemas = [...baseTables, ...dependentTables];
+
+    for (const schema of schemas) {
+        pool.query(schema, (err, results) => {
+            if (err) {
+                console.error('Error creating table:', err.message);
+                return;
+            }
+            console.log('Table created successfully');
+        });
+    }
 };
 
-module.exports = {
-    pool,
-    hashPassword
-};
+// Optionally, call createTables() to initialize all tables when the module is required.
+createTables();
