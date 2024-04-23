@@ -144,7 +144,7 @@ router.get('/:id', async (req, res) => {
 // Update a user by ID
 router.put('/:id', async (req, res) => {
     try {
-        const user = await User.updateById(req.params.id, req.body, { new: true, runValidators: true });
+        const user = await Admin.updateById(req.params.id, req.body, { new: true, runValidators: true });
         if (!user) {
             return res.status(404).send();
         }
@@ -156,12 +156,31 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete admin
-router.delete('/:id', authenticateAdmin, async (req, res) => {
+router.delete('/:id', async (req, res) => {
     try {
         await Admin.deleteById(req.params.id);
         res.json({ message: 'Admin deleted successfully' });
     } catch (err) {
         res.status(500).json({ message: err.message });
+    }
+});
+
+router.post('/users/login', async (req, res) => {
+    try {
+        const user = await User.getByEmailOrUsername(req.body.email, req.body.username);
+        if (!user) {
+            throw new Error();
+        }
+
+        const isMatch = await bcrypt.compare(req.body.password, user.passwordHash);
+        if (!isMatch) {
+            throw new Error();
+        }
+
+        const token = User.generateAuthToken(user);
+        res.send({ user, token });
+    } catch (error) {
+        res.status(400).send();
     }
 });
 

@@ -1,6 +1,8 @@
 const { pool } = require('../database');
 const bcrypt = require('bcrypt');
 const uuid = require('uuid');
+const jwt = require('jsonwebtoken');
+
 
 const User = {
 
@@ -14,6 +16,11 @@ const User = {
                 }
             });
         });
+    },
+
+    generateAuthToken: (user) => {
+        const token = jwt.sign({ id: user.id.toString() }, 'secret');
+        return token;
     },
 
     findOne: (identifier) => {
@@ -108,22 +115,21 @@ const User = {
             });
         });
     },
-
     updateById: (id, userData) => {
         return new Promise(async (resolve, reject) => {
             // Check if the new email already exists in the database
             const existingUser = await User.getByEmailOrUsername(userData.email, userData.username);
             if (existingUser && existingUser.id !== id) {
-                reject(new Error('Email already in use'));
-            } else {
-                pool.query('UPDATE users SET ? WHERE id = ?', [userData, id], (error, results, fields) => {
-                    if (error) {
-                        reject(error);
-                    } else {
-                        resolve(results);
-                    }
-                });
+                // If the email is taken by another user, remove it from the update data
+                delete userData.email;
             }
+            pool.query('UPDATE users SET ? WHERE id = ?', [userData, id], (error, results, fields) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(results);
+                }
+            });
         });
     },
 
