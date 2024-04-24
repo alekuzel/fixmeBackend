@@ -123,6 +123,8 @@ create: async (adminData) => {
         });
     },
 
+
+   
     // Update admin by ID
     updateById: (id, adminData) => {
         return new Promise((resolve, reject) => {
@@ -149,6 +151,25 @@ create: async (adminData) => {
         });
     },
 
+    
+        registerUnsuccessfulLoginAttempt: (adminId, ipAddress) => {
+            return new Promise((resolve, reject) => {
+                pool.query(
+                    'INSERT INTO adminLoginAttempts (adminId, ipAddress, attemptTime) VALUES (?, ?, NOW())',
+                    [adminId, ipAddress],
+                    (error, results) => {
+                        if (error) {
+                            return reject(error);
+                        }
+                        resolve(results);
+                    }
+                );
+            });
+        },
+    
+   
+
+
     // Update last login time
     updateLastLogin: (id) => {
         return new Promise((resolve, reject) => {
@@ -161,6 +182,8 @@ create: async (adminData) => {
             });
         });
     },
+
+    
 };
 
 const hashPassword = async (password) => {

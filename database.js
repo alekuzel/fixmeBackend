@@ -11,6 +11,15 @@ const pool = mysql.createPool({
     port: 3310
 });
 
+const adminLoginAttemptsTableSchema = `
+CREATE TABLE IF NOT EXISTS adminLoginAttempts (
+    attemptID INT AUTO_INCREMENT PRIMARY KEY,
+    adminID INT NOT NULL,
+    attemptTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ipAddress VARCHAR(45) NOT NULL,
+    FOREIGN KEY (adminID) REFERENCES admins(id)
+)
+`;
 // Users Table Schema
 const usersTableSchema = `
 CREATE TABLE IF NOT EXISTS users (
@@ -201,7 +210,8 @@ const createTables = async () => {
         bookingsTableSchema, // Depends on users and services
         userHistoryTableSchema, // Depends on users and services
         userPreferencesTableSchema, // Depends on users
-        adminsTableSchema // Admins is independent but kept last for any logical dependencies
+        adminsTableSchema,
+        adminLoginAttemptsTableSchema, // Admins is independent but kept last for any logical dependencies
     ];
 
     const schemas = [...baseTables, ...dependentTables];

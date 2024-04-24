@@ -1,6 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-
+const bcrypt = require('bcrypt');
 
 // Import controllers
 const usersController = require('./controllers/usersController');
@@ -17,11 +17,24 @@ app.use(bodyParser.json());
 app.use('/users', usersController);
 app.use('/admins', adminsController);
 
-// Example route with admin authentication
-app.post('/admin/login', authenticateAdmin, async (req, res) => {
+app.post('/admin/login', async (req, res) => {
     try {
-        await Admin.updateLastLogin(req.admin.id);
-        res.json({ message: 'Authentication successful', admin: req.admin });
+        const admin = await Admin.getByEmailOrUsername(req.body.email, req.body.username);
+        if (!admin) {
+            return res.status(401).json({ message: 'Invalid username or password' });
+        }
+
+        const match = await bcrypt.compare(req.body.password, admin.password);
+        if (!match) {
+            // Password does not match, register unsuccessful attempt
+            await Admin.registerUnsuccessfulLoginAttempt(admin.id, req.ip);
+            return res.status(401).json({ message: 'Invalid username or password' });
+        }
+
+        // If password matches, update last login and authenticate
+        const ipAddress = req.ip; // Get client IP address
+        await Admin.updateLastLogin(admin.id, ipAddress);
+        res.json({ message: 'Authentication successful', admin: admin });
     } catch (error) {
         console.error(error);
         res.status(500).send('An error occurred');
