@@ -46,6 +46,26 @@ app.get('/admin/dashboard', authenticateAdmin, (req, res) => {
     res.json({ message: 'Admin dashboard', admin: req.admin });
 });
 
+app.get('/loginAttempts', async (req, res) => {
+    try {
+        const attempts = await Admin.getAllLoginAttempts();
+        res.json(attempts);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('An error occurred');
+    }
+});
+
+app.get('/loginAttempts/:adminId', async (req, res) => {
+    try {
+        const attempts = await Admin.getUnsuccessfulLoginAttempts(req.params.adminId);
+        res.json(attempts);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('An error occurred');
+    }
+});
+
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });

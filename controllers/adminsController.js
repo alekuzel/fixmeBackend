@@ -5,6 +5,7 @@ const router = express.Router();
 const multer = require('multer');
 const { sendConfirmationEmail } = require('../utils/email');
 const { v4: uuidv4 } = require('uuid'); // Import UUID generator
+const { pool } = require('../database.js');
 
 const storage = multer.diskStorage({
     destination: function(req, file, cb) {
@@ -86,7 +87,7 @@ router.get('/admins', async (req, res) => {
     }
 });
 
-// Confirm registration
+// Confirm registration// Confirm registration
 router.post('/confirm-registration', async (req, res) => {
     const { token } = req.body;
 
@@ -95,18 +96,12 @@ router.post('/confirm-registration', async (req, res) => {
     }
 
     try {
-        // Check if an admin with the provided API key exists in the database
-        const admin = await Admin.findOne({ token: token });
+        const query = 'UPDATE admins SET status = ? WHERE token = ?';
+        const result = await pool.query(query, ['active', token]);
 
-        if (!admin) {
+        if (result.affectedRows === 0) {
             return res.status(404).json({ error: 'Admin not found' });
         }
-
-        // Update the status to 'active' to indicate confirmed registration
-        admin.status = 'active';
-
-        // Save the updated admin record
-        await admin.save();
 
         // Send a success response
         res.status(200).json({ message: 'Registration confirmed successfully' });
@@ -115,7 +110,6 @@ router.post('/confirm-registration', async (req, res) => {
         return res.status(500).json({ error: 'Failed to confirm registration' });
     }
 });
-
 
 
 
@@ -152,6 +146,16 @@ router.put('/:id', async (req, res) => {
     } catch (err) {
         console.log(err); // Add this line
         res.status(400).send(err);
+    }
+});
+
+router.get('/allLoginAttempts', async (req, res) => {
+    try {
+        const attempts = await Admin.getAllLoginAttempts();
+        res.json(attempts);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('An error occurred');
     }
 });
 

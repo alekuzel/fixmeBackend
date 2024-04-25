@@ -123,6 +123,33 @@ create: async (adminData) => {
         });
     },
 
+// Save admin data
+save: function() {
+    return new Promise((resolve, reject) => {
+        if (this.id) {
+            // If id is provided, update the admin
+            pool.query('UPDATE admins SET ? WHERE id = ?', [this, this.id], (error, results) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(results);
+                }
+            });
+        } else {
+            // If id is not provided, create a new admin
+            pool.query('INSERT INTO admins SET ?', this, (error, results) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(results);
+                }
+            });
+        }
+    });
+},
+
+    
+
 
    
     // Update admin by ID
@@ -135,6 +162,35 @@ create: async (adminData) => {
                     resolve(results);
                 }
             });
+        });
+    },
+
+    getAllLoginAttempts: () => {
+        return new Promise((resolve, reject) => {
+            pool.query(
+                'SELECT * FROM adminLoginAttempts ORDER BY attemptTime DESC',
+                (error, results) => {
+                    if (error) {
+                        return reject(error);
+                    }
+                    resolve(results);
+                }
+            );
+        });
+    },
+
+    getUnsuccessfulLoginAttempts: (adminId) => {
+        return new Promise((resolve, reject) => {
+            pool.query(
+                'SELECT * FROM adminLoginAttempts WHERE adminId = ? ORDER BY attemptTime DESC',
+                [adminId],
+                (error, results) => {
+                    if (error) {
+                        return reject(error);
+                    }
+                    resolve(results);
+                }
+            );
         });
     },
 
