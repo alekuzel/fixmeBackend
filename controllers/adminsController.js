@@ -21,13 +21,16 @@ const upload = multer({ storage: storage });
 // Upload admin image
 router.post('/:id/upload', upload.single('image'), async (req, res) => {
     try {
-        const admin = await Admin.getById(req.params.id);
-        if (!admin) {
-            return res.status(404).json({ message: 'Admin not found' });
-        }
-        admin.image = req.file.path;
-        await admin.save();
-        res.json({ message: 'Image uploaded successfully', admin });
+        const adminId = req.params.id;
+        const imagePath = req.file.path;
+        const query = 'UPDATE admins SET image = ? WHERE id = ?';
+
+        pool.query(query, [imagePath, adminId], (error, results) => {
+            if (error) {
+                return res.status(500).json({ message: error.message });
+            }
+            res.json({ message: 'Image uploaded successfully', results });
+        });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
