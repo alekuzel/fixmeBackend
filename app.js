@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
+const path = require('path');
 
 // Import controllers
 const usersController = require('./controllers/usersController');
@@ -16,6 +17,9 @@ app.use(bodyParser.json());
 // Mount controllers to specific routes
 app.use('/users', usersController);
 app.use('/admins', adminsController);
+
+app.use('/images', express.static(path.join(__dirname, 'public/images')));
+
 
 app.post('/admin/login', async (req, res) => {
     try {
@@ -45,6 +49,7 @@ app.post('/admin/login', async (req, res) => {
 app.get('/admin/dashboard', authenticateAdmin, (req, res) => {
     res.json({ message: 'Admin dashboard', admin: req.admin });
 });
+
 
 app.get('/loginAttempts', async (req, res) => {
     try {

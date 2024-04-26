@@ -165,6 +165,20 @@ save: function() {
         });
     },
 
+    update: function(id, data) {
+        // Implementation of update function...
+        return new Promise((resolve, reject) => {
+            const query = 'UPDATE admins SET ? WHERE id = ?';
+            pool.query(query, [data, id], (error, results) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(results);
+                }
+            });
+        });
+    },
+
     getAllLoginAttempts: () => {
         return new Promise((resolve, reject) => {
             pool.query(

@@ -6,23 +6,36 @@ const multer = require('multer');
 const { sendConfirmationEmail } = require('../utils/email');
 const { v4: uuidv4 } = require('uuid'); // Import UUID generator
 const { pool } = require('../database.js');
+const path = require('path');
+const fs = require('fs').promises;
+
 
 const storage = multer.diskStorage({
     destination: function(req, file, cb) {
-        cb(null, './uploads/admins/');
+        cb(null, '../public/images/admins/');
     },
     filename: function(req, file, cb) {
         cb(null, new Date().toISOString().replace(/:/g, '-') + file.originalname);
     }
 });
 
-const upload = multer({ storage: storage });
+const upload = multer({
+    storage: multer.diskStorage({
+        destination: function (req, file, cb) {
+            cb(null, './public/images/admins/');
+        },
+        filename: function (req, file, cb) {
+            const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+            cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+        }
+    })
+});
 
 // Upload admin image
 router.post('/:id/upload', upload.single('image'), async (req, res) => {
     try {
         const adminId = req.params.id;
-        const imagePath = req.file.path;
+        const imagePath = path.relative('public/images', req.file.path);
         const query = 'UPDATE admins SET image = ? WHERE id = ?';
 
         pool.query(query, [imagePath, adminId], (error, results) => {
@@ -36,6 +49,7 @@ router.post('/:id/upload', upload.single('image'), async (req, res) => {
     }
 });
 
+  
 
 // Create a new admin with email confirmation
 router.post('/register', upload.none(), async (req, res) => {
@@ -114,6 +128,42 @@ router.post('/confirm-registration', async (req, res) => {
     }
 });
 
+// Delete admin image
+router.delete('/:id/image', async (req, res) => {
+    try {
+        const admin = await Admin.getById(req.params.id);
+        if (admin && admin.image) {
+            // Use the correct base directory
+            const baseDir = path.resolve('public/images');
+            await fs.unlink(path.join(baseDir, admin.image));
+            await Admin.update(admin.id, { image: null });
+            res.json({ message: 'Image deleted successfully' });
+        } else {
+            res.status(404).json({ message: 'Admin or image not found' });
+        }
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Update admin image
+router.put('/:id/image', upload.single('image'), async (req, res) => {
+    try {
+        const adminId = req.params.id;
+        const imagePath = path.relative('public/images', req.file.path);
+        const query = 'UPDATE admins SET image = ? WHERE id = ?';
+
+        pool.query(query, [imagePath, adminId], (error, results) => {
+            if (error) {
+                return res.status(500).json({ message: error.message });
+            }
+            res.json({ message: 'Image updated successfully', results });
+        });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
 
 
 // Get all admins
@@ -124,6 +174,17 @@ router.get('/', async (req, res) => {
     } catch (error) {
         console.error('Error fetching admins:', error);
         return res.status(500).json({ error: 'Error fetching admins' });
+    }
+});
+
+router.get('/:id', async (req, res) => {
+    try {
+        const admin = await Admin.getById(req.params.id);
+        // Add the image URL to the admin object
+        admin.image = admin.image ? `http://localhost:3006/images/${admin.image}` : null;
+        res.json(admin);
+    } catch (err) {
+        res.status(404).json({ message: err.message });
     }
 });
 
