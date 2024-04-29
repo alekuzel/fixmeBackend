@@ -76,7 +76,6 @@ create: async (adminData) => {
 
         adminData.Username = username;
         adminData.apiKey = uuid.v4(); // Generate a new apiKey for each admin
-        adminData.token= uuid.v4(); // Generate a new confirmation token for each admin
 
         const hashedPassword = await hashPassword(adminData.password);
         adminData.password = hashedPassword;

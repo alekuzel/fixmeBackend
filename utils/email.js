@@ -27,8 +27,23 @@ const sendConfirmationEmail = async (email, token) => {
     }
 };
 
-module.exports = { sendConfirmationEmail };
+const sendResetPasswordEmail = async (email, token) => {
+    const resetLink = `http://localhost:3000/reset-password?token=${token}`; // Use the reset token
 
+    const msg = {
+        to: email,
+        from: 'a.brods@gmail.com', // Use the email address you verified with SendGrid
+        subject: 'Reset Your Password',
+        html: `<p>Please click the following link to reset your password: <a href="${resetLink}">${resetLink}</a></p>`,
+    };
 
+    try {
+        await sgMail.send(msg);
+        console.log('Password reset email sent successfully');
+    } catch (error) {
+        console.error('Error sending password reset email:', error);
+        throw new Error('Failed to send password reset email');
+    }
+};
 
-  
+module.exports = { sendConfirmationEmail, sendResetPasswordEmail };

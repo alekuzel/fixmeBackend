@@ -1,6 +1,7 @@
 const express = require('express');
 const Admin = require('../models/Admin');
 const authenticateAdmin = require('../middleware/authMiddleware');
+const { sendResetPasswordEmail } = require('../utils/email'); // Import the function
 const router = express.Router();
 const multer = require('multer');
 const { sendConfirmationEmail } = require('../utils/email');
@@ -8,6 +9,8 @@ const { v4: uuidv4 } = require('uuid'); // Import UUID generator
 const { pool } = require('../database.js');
 const path = require('path');
 const fs = require('fs').promises;
+const crypto = require('crypto');
+const bcrypt = require('bcrypt');
 
 
 const storage = multer.diskStorage({
@@ -50,7 +53,6 @@ router.post('/:id/upload', upload.single('image'), async (req, res) => {
 });
 
   
-
 // Create a new admin with email confirmation
 router.post('/register', upload.none(), async (req, res) => {
     const adminData = req.body;
@@ -65,18 +67,53 @@ router.post('/register', upload.none(), async (req, res) => {
         const apiKey = uuidv4();
 
         // Generate a confirmation token
-        const token = uuidv4();
+       // Generate the token
+const token = uuidv4();
 
-        // Create a new admin record in the database
-        const result = await Admin.create({ ...adminData, apiKey, token });
+// Log the generated token
+console.log('Generated token:', token);
 
-        // Send confirmation email with the generated confirmation token
-        await sendConfirmationEmail(adminData.email, token);
+// Use the token in Admin.create()
+const result = await Admin.create({ ...adminData, apiKey, token, status: 'inactive' });
+console.log(result);
+
+// Log the token again to ensure it's the same
+console.log('Token used in Admin.create():', token);
+
+// Send confirmation email with the generated confirmation token
+await sendConfirmationEmail(adminData.email, token);
+
+// Log the token again to ensure it's the same
+console.log('Token used in sendConfirmationEmail():', token);
 
         res.status(201).json({ message: 'Admin created successfully. Confirmation email sent.', admin: result });
     } catch (error) {
         console.error('Error creating admin:', error);
         return res.status(500).json({ error: error.message });
+    }
+});
+
+// Confirm registration
+router.post('/confirm-registration', async (req, res) => {
+    const { token } = req.body;
+
+    if (!token) {
+        return res.status(400).json({ error: 'Token is required' });
+    }
+
+    try {
+        const query = 'UPDATE admins SET status = ? WHERE token = ?';
+        const result = await pool.query(query, ['active', token]);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Admin not found' });
+        }
+
+        // Send a success response
+        res.status(200).json({ message: 'Registration confirmed successfully' });
+    } catch (error) {
+        console.error('Error confirming registration:', error);
+        return res.status(500).json({ error: 'Failed to confirm registration' });
     }
 });
 
@@ -104,29 +141,7 @@ router.get('/admins', async (req, res) => {
     }
 });
 
-// Confirm registration// Confirm registration
-router.post('/confirm-registration', async (req, res) => {
-    const { token } = req.body;
 
-    if (!token) {
-        return res.status(400).json({ error: 'Token is required' });
-    }
-
-    try {
-        const query = 'UPDATE admins SET status = ? WHERE token = ?';
-        const result = await pool.query(query, ['active', token]);
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ error: 'Admin not found' });
-        }
-
-        // Send a success response
-        res.status(200).json({ message: 'Registration confirmed successfully' });
-    } catch (error) {
-        console.error('Error confirming registration:', error);
-        return res.status(500).json({ error: 'Failed to confirm registration' });
-    }
-});
 
 // Delete admin image
 router.delete('/:id/image', async (req, res) => {
@@ -166,6 +181,79 @@ router.put('/:id/image', upload.single('image'), async (req, res) => {
 
 
 
+router.post('/forgot-password', async (req, res) => {
+    const { email } = req.body;
+  
+    pool.query('SELECT * FROM admins WHERE email = ?', [email], async (error, results) => {
+      if (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Error processing password reset request' });
+      }
+  
+      if (results.length === 0) {
+        return res.status(404).json({ message: 'Admin not found' });
+      }
+  
+      const token = crypto.randomBytes(20).toString('hex');
+      const now = new Date();
+      const tokenExpires = now.getTime() + 30 * 60 * 1000; // Token expires in 30 minutes
+  
+      try {
+        const { affectedRows } = await pool.query('UPDATE admins SET resetPasswordToken = ?, resetPasswordExpires = ? WHERE email = ?', [token, tokenExpires, email]);
+  
+        if (affectedRows === 0) {
+          return res.status(500).json({ message: 'Error updating admin' });
+        }
+  
+        try {
+          await sendResetPasswordEmail(email, token); // Use the new function
+        } catch (error) {
+          console.error('Error sending password reset email:', error);
+          return res.status(500).json({ message: 'Error sending password reset email' });
+        }
+  
+        res.json({ message: 'Password reset email sent' });
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error processing password reset request' });
+      }
+    });
+});
+
+router.post('/password-reset', async (req, res) => {
+    const { email, token, newPassword } = req.body;
+  
+    pool.query('SELECT * FROM admins WHERE email = ? AND resetPasswordToken = ? AND resetPasswordExpires > ?', [email, token, Date.now()], async (error, results) => {
+      if (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Error processing password reset request' });
+      }
+  
+      const [admin] = results;
+  
+      if (!admin) {
+        return res.status(400).json({ message: 'Invalid or expired password reset token' });
+      }
+  
+      // Hash the new password
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+  
+      // Update the password in the database
+      pool.query('UPDATE admins SET password = ?, resetPasswordToken = NULL, resetPasswordExpires = NULL WHERE email = ?', [hashedPassword, email], (error, results) => {
+        if (error) {
+            console.error(error);
+            return res.status(500).json({ message: 'Error processing password reset request', error: error.message });
+          }
+  
+        if (results.affectedRows === 0) {
+          return res.status(500).json({ message: 'Error updating admin' });
+        }
+  
+        res.json({ message: 'Password reset successful' });
+      });
+    });
+  });
+  
 // Get all admins
 router.get('/', async (req, res) => {
     try {

@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS users (
     lastName VARCHAR(255) NOT NULL,
     phoneNumber VARCHAR(20),
     profilePictureURL VARCHAR(255),
+    status ENUM('active', 'inactive', 'suspended'),
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     language VARCHAR(255),
