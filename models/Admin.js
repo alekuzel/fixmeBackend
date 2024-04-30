@@ -1,6 +1,9 @@
 const { pool } = require('../database');
 const bcrypt = require('bcrypt');
 const uuid = require('uuid');
+const config = require('../config.js');
+const crypto = require('crypto');
+const { sendResetPasswordEmail, sendConfirmationEmail } = require('../utils/email'); // Import the function
 
 const Admin = {
 
@@ -14,6 +17,22 @@ const Admin = {
                 }
             });
         });
+    },
+
+    async updateStatusByToken(token) {
+        try {
+            const query = 'UPDATE admins SET status = ? WHERE token = ?';
+            const result = await pool.query(query, ['active', token]);
+
+            if (result.affectedRows === 0) {
+                return { error: 'Admin not found' };
+            }
+
+            return { success: true };
+        } catch (error) {
+            console.error('Error updating admin status:', error);
+            throw new Error('Failed to update admin status');
+        }
     },
 
     findOne: (identifier) => {
@@ -57,6 +76,7 @@ const Admin = {
 // Create a new admin
 create: async (adminData) => {
     try {
+        // Generate unique username
         const firstNamePrefix = adminData.firstName.slice(0, 3).toLowerCase();
         const lastNamePrefix = adminData.lastName.slice(0, 3).toLowerCase();
 
@@ -74,18 +94,29 @@ create: async (adminData) => {
             }
         }
 
-        adminData.Username = username;
-        adminData.apiKey = uuid.v4(); // Generate a new apiKey for each admin
+        adminData.username = username;
 
+        // Generate API key
+        adminData.apiKey = uuid.v4();
+
+        // Generate confirmation token
+        const token = crypto.randomBytes(20).toString('hex');
+        adminData.token = token;
+
+        // Hash password
         const hashedPassword = await hashPassword(adminData.password);
         adminData.password = hashedPassword;
 
+        // Insert into database
         return new Promise((resolve, reject) => {
             pool.query('INSERT INTO admins SET ?', adminData, (error, results, fields) => {
                 if (error) {
                     reject(error);
                 } else {
-                    resolve(results);
+                    // Send confirmation email with the token
+                    sendConfirmationEmail(adminData.email, token)
+                        .then(() => resolve(results))
+                        .catch((error) => reject(error));
                 }
             });
         });
@@ -93,7 +124,7 @@ create: async (adminData) => {
         throw error;
     }
 },
-    // Get all admins
+
     getAll: () => {
         return new Promise((resolve, reject) => {
             pool.query('SELECT * FROM admins', (error, results, fields) => {
@@ -220,6 +251,33 @@ save: function() {
         });
     },
 
+    async confirmRegistration(token) {
+        try {
+            const query = 'UPDATE admins SET status = ? WHERE token = ?';
+            const result = await pool.query(query, ['active', token]);
+
+            if (result.affectedRows === 0) {
+                return { error: 'Admin not found' };
+            }
+
+            return { success: true };
+        } catch (error) {
+            console.error('Error confirming registration:', error);
+            throw new Error('Failed to confirm registration');
+        }
+    },
+
+    async updateImage(adminId, imagePath) {
+        try {
+            const query = 'UPDATE admins SET image = ? WHERE id = ?';
+            const result = await pool.query(query, [imagePath, adminId]);
+
+            return result;
+        } catch (error) {
+            console.error('Error updating admin image:', error);
+            throw new Error('Failed to update admin image');
+        }
+    },
     
         registerUnsuccessfulLoginAttempt: (adminId, ipAddress) => {
             return new Promise((resolve, reject) => {

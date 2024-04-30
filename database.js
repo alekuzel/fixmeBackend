@@ -1,15 +1,9 @@
 const mysql = require('mysql');
 const bcrypt = require('bcrypt');
+const config = require('./config');
 
-// Create a MySQL connection pool
-const pool = mysql.createPool({
-    connectionLimit: 10,
-    host: 'localhost',
-    user: 'root',
-    password: '1234',
-    database: 'fixmeapp',
-    port: 3310
-});
+
+const pool = mysql.createPool(config.database);
 
 const adminLoginAttemptsTableSchema = `
 CREATE TABLE IF NOT EXISTS adminLoginAttempts (
@@ -30,7 +24,7 @@ CREATE TABLE IF NOT EXISTS users (
     firstName VARCHAR(255) NOT NULL,
     lastName VARCHAR(255) NOT NULL,
     phoneNumber VARCHAR(20),
-    profilePictureURL VARCHAR(255),
+    image VARCHAR(255),
     status ENUM('active', 'inactive', 'suspended'),
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

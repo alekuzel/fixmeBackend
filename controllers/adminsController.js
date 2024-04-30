@@ -1,10 +1,9 @@
 const express = require('express');
 const Admin = require('../models/Admin');
 const authenticateAdmin = require('../middleware/authMiddleware');
-const { sendResetPasswordEmail } = require('../utils/email'); // Import the function
+const { sendResetPasswordEmail, sendConfirmationEmail } = require('../utils/email'); // Import the functions
 const router = express.Router();
 const multer = require('multer');
-const { sendConfirmationEmail } = require('../utils/email');
 const { v4: uuidv4 } = require('uuid'); // Import UUID generator
 const { pool } = require('../database.js');
 const path = require('path');
@@ -102,11 +101,10 @@ router.post('/confirm-registration', async (req, res) => {
     }
 
     try {
-        const query = 'UPDATE admins SET status = ? WHERE token = ?';
-        const result = await pool.query(query, ['active', token]);
+        const confirmationResult = await Admin.confirmRegistration(token);
 
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ error: 'Admin not found' });
+        if (confirmationResult.error) {
+            return res.status(404).json({ error: confirmationResult.error });
         }
 
         // Send a success response
@@ -114,6 +112,20 @@ router.post('/confirm-registration', async (req, res) => {
     } catch (error) {
         console.error('Error confirming registration:', error);
         return res.status(500).json({ error: 'Failed to confirm registration' });
+    }
+});
+
+router.put('/:id/image', upload.single('image'), async (req, res) => {
+    try {
+        const adminId = req.params.id;
+        const imagePath = path.relative('public/images', req.file.path);
+
+        const result = await Admins.updateImage(adminId, imagePath);
+
+        res.json({ message: 'Image updated successfully', result });
+    } catch (error) {
+        console.error('Error updating admin image:', error);
+        res.status(500).json({ error: 'Failed to update admin image' });
     }
 });
 

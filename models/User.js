@@ -2,6 +2,7 @@ const { pool } = require('../database');
 const bcrypt = require('bcrypt');
 const uuid = require('uuid');
 const jwt = require('jsonwebtoken');
+const config = require('../config.js');
 
 
 const User = {
@@ -18,8 +19,8 @@ const User = {
         });
     },
 
-    generateAuthToken: (user) => {
-        const token = jwt.sign({ id: user.id.toString() }, 'secret');
+    generateAuthToken() {
+        const token = jwt.sign({ id: this.id.toString() }, config.jwtSecret);
         return token;
     },
 
