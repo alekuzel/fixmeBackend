@@ -33,38 +33,64 @@ CREATE TABLE IF NOT EXISTS users (
 )
 `;
 
-const providersTableSchema = `
-CREATE TABLE IF NOT EXISTS providers (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(255) UNIQUE NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    passwordHash VARCHAR(255) NOT NULL,
-    firstName VARCHAR(255) NOT NULL,
-    lastName VARCHAR(255) NOT NULL,
-    phoneNumber VARCHAR(20),
-    image VARCHAR(255),
-    status ENUM('active', 'inactive', 'suspended'),
-    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    language VARCHAR(255),
-    timeZone VARCHAR(255)
-)
+const servicesTableSchema = `
+    CREATE TABLE IF NOT EXISTS services (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        providerID INT,
+        categoryID INT,
+        serviceName VARCHAR(255) NOT NULL,
+        description TEXT,
+        priceID INT,
+        isActive BOOLEAN NOT NULL DEFAULT 1,
+        FOREIGN KEY (providerID) REFERENCES users(id),
+        FOREIGN KEY (categoryID) REFERENCES categories(id),
+        FOREIGN KEY (priceID) REFERENCES prices(id)
+    )
 `;
 
-const servicesTableSchema = `
-CREATE TABLE IF NOT EXISTS services (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    providerID INT,
-    categoryID INT,
-    serviceName VARCHAR(255) NOT NULL,
-    description TEXT,
-    priceID INT,
-    isActive BOOLEAN NOT NULL DEFAULT 1,
-    FOREIGN KEY (providerID) REFERENCES providers(id),
-    FOREIGN KEY (categoryID) REFERENCES categories(id),
-    FOREIGN KEY (priceID) REFERENCES prices(id)
-)
+// Additional table schemas
+const pricesTableSchema = `
+    CREATE TABLE IF NOT EXISTS prices (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        serviceID INT,
+        providerID INT,
+        basePrice DECIMAL(10, 2) NOT NULL,
+        FOREIGN KEY (serviceID) REFERENCES services(id),
+        FOREIGN KEY (providerID) REFERENCES users(id)
+    )
 `;
+
+const availabilityTableSchema = `
+    CREATE TABLE IF NOT EXISTS availability (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        serviceID INT,
+        availableTimes JSON,
+        FOREIGN KEY (serviceID) REFERENCES services(id)
+    )
+`;
+
+const loyaltyDiscountsTableSchema = `
+    CREATE TABLE IF NOT EXISTS loyaltyDiscounts (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        userID INT,
+        discount DECIMAL(5, 2),
+        FOREIGN KEY (userID) REFERENCES users(id)
+    )
+`;
+
+//price will be adjusted based on the availability of the provider and the loyalty of the user
+const servicePriceAdjustmentsTableSchema = `
+    CREATE TABLE IF NOT EXISTS servicePriceAdjustments (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        serviceID INT,
+        providerID INT,
+        availabilityAdjustment DECIMAL(5, 2),
+        loyaltyAdjustment DECIMAL(5, 2),
+        FOREIGN KEY (serviceID) REFERENCES services(id),
+        FOREIGN KEY (providerID) REFERENCES users(id)
+    )
+`;
+
 
 const createDurationTable = `
 CREATE TABLE IF NOT EXISTS duration (
@@ -92,8 +118,8 @@ CREATE TABLE IF NOT EXISTS serviceDuration(
     customDuration INT,
     FOREIGN KEY (serviceID) REFERENCES services(id),
     FOREIGN KEY (durationID) REFERENCES duration(id),
-    FOREIGN KEY (hairTypeID) REFERENCES hairtypes(id),
-    FOREIGN KEY (providerID) REFERENCES providers(id),
+    FOREIGN KEY (hairtypeID) REFERENCES hairtypes(id),
+    FOREIGN KEY (providerID) REFERENCES users(id),
     PRIMARY KEY (serviceID, durationID, hairtypeID,  providerID)
 );\
 `;
@@ -250,13 +276,15 @@ CREATE TABLE IF NOT EXISTS ratings (
 )
 `;
 
-
 const createTables = async () => {
     const baseTables = [
-        providersTableSchema, // Providers table must exist before any references
         usersTableSchema, // Users table must exist before any references
         categoriesTableSchema, // Categories must exist before services
+        createDurationTable,
+        createHairTypeTable,
         servicesTableSchema, // Services must exist before ratings, bookings, user history
+        adminsTableSchema,
+        pricesTableSchema,
     ];
 
     const dependentTables = [
@@ -264,15 +292,15 @@ const createTables = async () => {
         userLocationTableSchema, // Depends on users
         userFriendsTableSchema, // Depends on users
         privacySettingsTableSchema, // Depends on users
-        ratingsTableSchema, // Depends on users and services
+        userPreferencesTableSchema, // Depends on users
+        createServiceDurationTable, // Depends on services
         bookingsTableSchema, // Depends on users and services
         userHistoryTableSchema, // Depends on users and services
-        userPreferencesTableSchema, // Depends on users
-        adminsTableSchema,
-        createServiceDurationTable, // Depends on services
-        createDurationTable,
-        createHairTypeTable,
+        ratingsTableSchema, // Depends on users and services
         adminLoginAttemptsTableSchema, // Admins is independent but kept last for any logical dependencies
+        availabilityTableSchema,
+        loyaltyDiscountsTableSchema,
+        servicePriceAdjustmentsTableSchema,
     ];
 
     const schemas = [...baseTables, ...dependentTables];
