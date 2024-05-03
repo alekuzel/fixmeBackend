@@ -28,6 +28,26 @@ const upload = multer({
     })
 });
 
+// Get user image by ID
+router.get('/:id/image', async (req, res) => {
+    try {
+        const user = await User.getById(req.params.id);
+        if (user && user.image) {
+            // Construct the absolute path to the user's image
+            const imagePath = path.resolve('public/images/users', user.image);
+            // Read the image file and send it in the response
+            const image = await fs.readFile(imagePath);
+            res.writeHead(200, { 'Content-Type': 'image/jpeg' }); // Adjust content type based on image type
+            res.end(image, 'binary');
+        } else {
+            res.status(404).json({ message: 'User or image not found' });
+        }
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+
 // Upload user image
 router.post('/:id/upload', upload.single('image'), async (req, res) => {
     try {

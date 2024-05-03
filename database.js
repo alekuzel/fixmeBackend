@@ -33,14 +33,84 @@ CREATE TABLE IF NOT EXISTS users (
 )
 `;
 
+const providersTableSchema = `
+CREATE TABLE IF NOT EXISTS providers (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(255) UNIQUE NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    passwordHash VARCHAR(255) NOT NULL,
+    firstName VARCHAR(255) NOT NULL,
+    lastName VARCHAR(255) NOT NULL,
+    phoneNumber VARCHAR(20),
+    image VARCHAR(255),
+    status ENUM('active', 'inactive', 'suspended'),
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    language VARCHAR(255),
+    timeZone VARCHAR(255)
+)
+`;
+
 const servicesTableSchema = `
 CREATE TABLE IF NOT EXISTS services (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
+    providerID INT,
+    categoryID INT,
+    serviceName VARCHAR(255) NOT NULL,
     description TEXT,
-    price DECIMAL(10, 2) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    priceID INT,
+    isActive BOOLEAN NOT NULL DEFAULT 1,
+    FOREIGN KEY (providerID) REFERENCES providers(id),
+    FOREIGN KEY (categoryID) REFERENCES categories(id),
+    FOREIGN KEY (priceID) REFERENCES prices(id)
+)
+`;
+
+const createDurationTable = `
+CREATE TABLE IF NOT EXISTS duration (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    duration INT NOT NULL
+)
+`;
+
+
+const createHairTypeTable = `
+CREATE TABLE IF NOT EXISTS hairtypes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    UNIQUE(name)
+)
+`;
+
+
+const createServiceDurationTable = `
+CREATE TABLE IF NOT EXISTS serviceDuration(
+    serviceID INT,
+    durationID INT,
+    hairtypeID INT,
+    providerID INT,
+    customDuration INT,
+    FOREIGN KEY (serviceID) REFERENCES services(id),
+    FOREIGN KEY (durationID) REFERENCES duration(id),
+    FOREIGN KEY (hairTypeID) REFERENCES hairtypes(id),
+    FOREIGN KEY (providerID) REFERENCES providers(id),
+    PRIMARY KEY (serviceID, durationID, hairtypeID,  providerID)
+);\
+`;
+
+
+
+// Define schema for categories table
+
+const categoriesTableSchema = `
+CREATE TABLE IF NOT EXISTS categories (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    Description TEXT,
+    Image VARCHAR(255),
+    IsActive BOOLEAN NOT NULL DEFAULT 1,
+    CreatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UpdatedAt TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP
 )
 `;
 
@@ -130,14 +200,6 @@ const adminsTableSchema = `
 
 
 
-// Define schema for categories table
-const categoriesTableSchema = `
-CREATE TABLE IF NOT EXISTS categories (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL
-)
-`;
-
 const bookingsTableSchema = `
 CREATE TABLE IF NOT EXISTS bookings (
     bookingID INT AUTO_INCREMENT PRIMARY KEY,
@@ -191,6 +253,7 @@ CREATE TABLE IF NOT EXISTS ratings (
 
 const createTables = async () => {
     const baseTables = [
+        providersTableSchema, // Providers table must exist before any references
         usersTableSchema, // Users table must exist before any references
         categoriesTableSchema, // Categories must exist before services
         servicesTableSchema, // Services must exist before ratings, bookings, user history
@@ -206,6 +269,9 @@ const createTables = async () => {
         userHistoryTableSchema, // Depends on users and services
         userPreferencesTableSchema, // Depends on users
         adminsTableSchema,
+        createServiceDurationTable, // Depends on services
+        createDurationTable,
+        createHairTypeTable,
         adminLoginAttemptsTableSchema, // Admins is independent but kept last for any logical dependencies
     ];
 
