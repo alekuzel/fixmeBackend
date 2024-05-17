@@ -2,17 +2,20 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
 const path = require('path');
+const cookieParser = require('cookie-parser'); // Import cookie-parser
 
 // Import controllers
 const usersController = require('./controllers/usersController');
 const adminsController = require('./controllers/adminsController');
-const Admin = require('./models/Admin'); // Import your Admin model
-const authenticateAdmin = require('./middleware/authMiddleware'); // Import authMiddleware
+const Admin = require('./models/Admin');
+const User = require('./models/User');
+const authenticateAdmin = require('./middleware/authMiddleware');
 
 const app = express();
 const port = 3006;
 
 app.use(bodyParser.json());
+app.use(cookieParser()); // Use cookie-parser middleware
 
 // Mount controllers to specific routes
 app.use('/users', usersController);
@@ -20,7 +23,7 @@ app.use('/admins', adminsController);
 
 app.use('/images', express.static(path.join(__dirname, 'public/images')));
 
-
+// Admin login endpoint
 app.post('/admin/login', async (req, res) => {
     try {
         const admin = await Admin.getByEmailOrUsername(req.body.email, req.body.username);
@@ -30,14 +33,13 @@ app.post('/admin/login', async (req, res) => {
 
         const match = await bcrypt.compare(req.body.password, admin.password);
         if (!match) {
-            // Password does not match, register unsuccessful attempt
             await Admin.registerUnsuccessfulLoginAttempt(admin.id, req.ip);
             return res.status(401).json({ message: 'Invalid username or password' });
         }
 
-        // If password matches, update last login and authenticate
-        const ipAddress = req.ip; // Get client IP address
-        await Admin.updateLastLogin(admin.id, ipAddress);
+        await Admin.updateLastLogin(admin.id, req.ip);
+        // Set a cookie upon successful authentication
+        res.cookie('adminSessionId', 'adminAuthToken', { httpOnly: true, secure: true });
         res.json({ message: 'Authentication successful', admin: admin });
     } catch (error) {
         console.error(error);
@@ -45,26 +47,24 @@ app.post('/admin/login', async (req, res) => {
     }
 });
 
-// Example protected route
-app.get('/admin/dashboard', authenticateAdmin, (req, res) => {
-    res.json({ message: 'Admin dashboard', admin: req.admin });
-});
-
-
-app.get('/loginAttempts', async (req, res) => {
+// User login endpoint
+app.post('/users/login', async (req, res) => {
     try {
-        const attempts = await Admin.getAllLoginAttempts();
-        res.json(attempts);
-    } catch (error) {
-        console.error(error);
-        res.status(500).send('An error occurred');
-    }
-});
+        const { email, username, password } = req.body;
+        const user = await User.getByEmailOrUsername(email, username);
+        if (!user) {
+            return res.status(401).json({ message: 'Invalid username or password' });
+        }
 
-app.get('/loginAttempts/:adminId', async (req, res) => {
-    try {
-        const attempts = await Admin.getUnsuccessfulLoginAttempts(req.params.adminId);
-        res.json(attempts);
+        const match = await bcrypt.compare(password, user.password);
+        if (!match) {
+            return res.status(401).json({ message: 'Invalid username or password' });
+        }
+
+        await User.updateLastLogin(user.id, req.ip);
+        // Set a cookie upon successful authentication
+        res.cookie('userSessionId', 'userAuthToken', { httpOnly: true, secure: true });
+        res.json({ message: 'Authentication successful', user: user });
     } catch (error) {
         console.error(error);
         res.status(500).send('An error occurred');

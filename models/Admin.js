@@ -179,8 +179,6 @@ save: function() {
 },
 
     
-
-
    
     // Update admin by ID
     updateById: (id, adminData) => {
@@ -212,7 +210,7 @@ save: function() {
     getAllLoginAttempts: () => {
         return new Promise((resolve, reject) => {
             pool.query(
-                'SELECT * FROM adminLoginAttempts ORDER BY attemptTime DESC',
+                'SELECT * FROM adminloginattempts ORDER BY attemptTime DESC',
                 (error, results) => {
                     if (error) {
                         return reject(error);
@@ -226,7 +224,7 @@ save: function() {
     getUnsuccessfulLoginAttempts: (adminId) => {
         return new Promise((resolve, reject) => {
             pool.query(
-                'SELECT * FROM adminLoginAttempts WHERE adminId = ? ORDER BY attemptTime DESC',
+                'SELECT * FROM adminloginattempts WHERE adminId = ? ORDER BY attemptTime DESC',
                 [adminId],
                 (error, results) => {
                     if (error) {
@@ -282,7 +280,7 @@ save: function() {
         registerUnsuccessfulLoginAttempt: (adminId, ipAddress) => {
             return new Promise((resolve, reject) => {
                 pool.query(
-                    'INSERT INTO adminLoginAttempts (adminId, ipAddress, attemptTime) VALUES (?, ?, NOW())',
+                    'INSERT INTO adminloginattempts (adminId, ipAddress, attemptTime) VALUES (?, ?, NOW())',
                     [adminId, ipAddress],
                     (error, results) => {
                         if (error) {

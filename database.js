@@ -1,12 +1,10 @@
 const mysql = require('mysql');
-const bcrypt = require('bcrypt');
 const config = require('./config');
-
 
 const pool = mysql.createPool(config.database);
 
 const adminLoginAttemptsTableSchema = `
-CREATE TABLE IF NOT EXISTS adminLoginAttempts (
+CREATE TABLE IF NOT EXISTS adminloginattempts (
     attemptID INT AUTO_INCREMENT PRIMARY KEY,
     adminID INT NOT NULL,
     attemptTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -108,7 +106,6 @@ CREATE TABLE IF NOT EXISTS hairtypes (
 )
 `;
 
-
 const createServiceDurationTable = `
 CREATE TABLE IF NOT EXISTS serviceDuration(
     serviceID INT,
@@ -121,7 +118,7 @@ CREATE TABLE IF NOT EXISTS serviceDuration(
     FOREIGN KEY (hairtypeID) REFERENCES hairtypes(id),
     FOREIGN KEY (providerID) REFERENCES users(id),
     PRIMARY KEY (serviceID, durationID, hairtypeID,  providerID)
-);\
+);
 `;
 
 
@@ -153,6 +150,17 @@ CREATE TABLE IF NOT EXISTS userActivityLog (
     FOREIGN KEY (id) REFERENCES users(id)
 )
 `;
+
+const userLoginAttemptsTableSchema = `
+CREATE TABLE IF NOT EXISTS userLoginAttempts (
+    attemptID INT AUTO_INCREMENT PRIMARY KEY,
+    userID INT NOT NULL,
+    attemptTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ipAddress VARCHAR(45) NOT NULL,
+    FOREIGN KEY (userID) REFERENCES users(id)
+)
+`;
+
 
 // User Location Table Schema
 const userLocationTableSchema = `
@@ -259,7 +267,6 @@ CREATE TABLE IF NOT EXISTS userHistory (
 `;
 
 
-
 // Ratings Table Schema
 const ratingsTableSchema = `
 CREATE TABLE IF NOT EXISTS ratings (
@@ -278,7 +285,7 @@ CREATE TABLE IF NOT EXISTS ratings (
 
 const createTables = async () => {
     const baseTables = [
-        usersTableSchema, // Users table must exist before any references
+        usersTableSchema, // Users table must exist before any other references
         categoriesTableSchema, // Categories must exist before services
         createDurationTable,
         createHairTypeTable,
@@ -297,8 +304,9 @@ const createTables = async () => {
         bookingsTableSchema, // Depends on users and services
         userHistoryTableSchema, // Depends on users and services
         ratingsTableSchema, // Depends on users and services
-        adminLoginAttemptsTableSchema, // Admins is independent but kept last for any logical dependencies
-        availabilityTableSchema,
+        adminLoginAttemptsTableSchema, // Depends on admins
+        availabilityTableSchema, 
+        userLoginAttemptsTableSchema,
         loyaltyDiscountsTableSchema,
         servicePriceAdjustmentsTableSchema,
     ];
@@ -316,6 +324,5 @@ const createTables = async () => {
     }
 };
 
-// Optionally, call createTables() to initialize all tables when the module is required.
 createTables();
 module.exports = { pool };

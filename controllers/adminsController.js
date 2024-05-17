@@ -72,7 +72,6 @@ const token = uuidv4();
 // Log the generated token
 console.log('Generated token:', token);
 
-// Use the token in Admin.create()
 const result = await Admin.create({ ...adminData, apiKey, token, status: 'inactive' });
 console.log(result);
 
@@ -95,20 +94,17 @@ console.log('Token used in sendConfirmationEmail():', token);
 // Confirm registration
 router.post('/confirm-registration', async (req, res) => {
     const { token } = req.body;
-
     if (!token) {
         return res.status(400).json({ error: 'Token is required' });
     }
-
     try {
         const confirmationResult = await Admin.confirmRegistration(token);
 
         if (confirmationResult.error) {
             return res.status(404).json({ error: confirmationResult.error });
         }
-
         // Send a success response
-        res.status(200).json({ message: 'Registration confirmed successfully' });
+        res.status(200).json({ messaAge: 'Registration confirmed successfully' });
     } catch (error) {
         console.error('Error confirming registration:', error);
         return res.status(500).json({ error: 'Failed to confirm registration' });

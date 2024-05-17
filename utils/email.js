@@ -15,7 +15,7 @@ const sendConfirmationEmail = async (email, token) => {
 
     const msg = {
         to: email,
-        from: 'a.brods@gmail.com', // Use the email address you verified with SendGrid
+        from: 'a.brods@gmail.com', // LATER no-reply@fixmeapp.se
         subject: 'Confirm Your Registration',
         html: `<p>Please click the following link to confirm your registration: <a href="${confirmationLink}">${confirmationLink}</a></p>`,
     };
