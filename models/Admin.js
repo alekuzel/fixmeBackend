@@ -7,6 +7,31 @@ const { sendResetPasswordEmail, sendConfirmationEmail } = require('../utils/emai
 
 const Admin = {
 
+    createSession: (adminId, sessionId, expiresAt) => {
+        return new Promise((resolve, reject) => {
+            pool.query(
+                'INSERT INTO admin_sessions (admin_id, session_id, expires_at) VALUES (?, ?, ?)',
+                [adminId, sessionId, expiresAt],
+                (error, results) => {
+                    if (error) {
+                        reject(error);
+                    } else {
+                        resolve(results.insertId); // This returns the ID of the created session if you need it
+                    }
+                }
+            );
+        });
+    },
+
+    async verifySession (sessionId) {
+        const result = await pool.query('SELECT * FROM admin_sessions WHERE session_id = ? AND expires_at > NOW()', [sessionId]);
+        return result.length > 0;
+    },
+
+    async cleanupSessions () {
+        await pool.query('DELETE FROM admin_sessions WHERE expires_at <= NOW()');
+    },
+
     getByEmailOrUsername: (email, username) => {
         return new Promise((resolve, reject) => {
             pool.query('SELECT * FROM admins WHERE Email = ? OR Username = ?', [email, username], (error, results, fields) => {

@@ -20,7 +20,6 @@ const storage = multer.diskStorage({
         cb(null, new Date().toISOString().replace(/:/g, '-') + file.originalname);
     }
 });
-
 const upload = multer({
     storage: multer.diskStorage({
         destination: function (req, file, cb) {
@@ -30,8 +29,22 @@ const upload = multer({
             const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
             cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
         }
-    })
+    }),
+    fileFilter: function (req, file, cb) {
+        // Check file types
+        const allowedFileTypes = ['.jpg', '.jpeg', '.png']; // Specify allowed file extensions
+        const fileExt = path.extname(file.originalname).toLowerCase(); // Get file extension
+
+        if (allowedFileTypes.includes(fileExt)) {
+            // Allow files with specified extensions
+            cb(null, true);
+        } else {
+            // Reject files with disallowed extensions
+            cb(new Error('Only JPG and PNG files are allowed'));
+        }
+    }
 });
+
 
 // Upload admin image
 router.post('/:id/upload', upload.single('image'), async (req, res) => {
@@ -214,7 +227,7 @@ router.post('/forgot-password', async (req, res) => {
         }
   
         try {
-          await sendResetPasswordEmail(email, token); // Use the new function
+          await sendResetPasswordEmail(email, token); 
         } catch (error) {
           console.error('Error sending password reset email:', error);
           return res.status(500).json({ message: 'Error sending password reset email' });
@@ -306,6 +319,18 @@ router.put('/:id', async (req, res) => {
     } catch (err) {
         console.log(err); // Add this line
         res.status(400).send(err);
+    }
+});
+
+router.get('/allLoginAttempts', async (req, res) => {
+    console.log("Fetching all login attempts");
+    try {
+        const attempts = await Admin.getAllLoginAttempts();
+        console.log("Attempts:", attempts);
+        res.json(attempts);
+    } catch (error) {
+        console.error("Error fetching attempts:", error);
+        res.status(500).send('An error occurred');
     }
 });
 
