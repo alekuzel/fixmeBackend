@@ -34,7 +34,7 @@ router.get('/:id/image', async (req, res) => {
         const user = await User.getById(req.params.id);
         if (user && user.image) {
             // Construct the absolute path to the user's image
-            const imagePath = path.resolve('public/images/users', user.image);
+            const imagePath = path.resolve('../public/images', user.image);
             // Read the image file and send it in the response
             const image = await fs.readFile(imagePath);
             res.writeHead(200, { 'Content-Type': 'image/jpeg' }); // Adjust content type based on image type
@@ -82,20 +82,18 @@ router.get('/', async (req, res) => {
     }
 });
 
-// Get a user by ID
+
+
 router.get('/:id', async (req, res) => {
-    const _id = req.params.id;
     try {
-        const user = await User.getById(_id);
-        if (!user) {
-            return res.status(404).send();
-        }
-        res.send(user);
+        const user = await User.getById(req.params.id);
+        // Add the image URL to the object
+        user.image = user.image ? `http://localhost:3006/images/${user.image}` : null;
+        res.json(user);
     } catch (err) {
-        res.status(500).send(err);
+        res.status(404).json({ message: err.message });
     }
 });
-
 
 // Delete user image
 router.delete('/:id/image', async (req, res) => {

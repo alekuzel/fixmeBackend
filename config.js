@@ -8,5 +8,10 @@ module.exports = {
         password: '1234',
         database: 'fixmeapp',
         port: 3310
-    }
+    },
+    nexmo: {
+        apiKey: 'Y7c82ad9d',
+        apiSecret: 'nG428Pze5wZicuAl',
+        adminPhoneNumber: '+46764213035' // Phone number to receive SMS notifications
+      }
 };

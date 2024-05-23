@@ -5,6 +5,7 @@ const bcrypt = require('bcrypt');
 const path = require('path');
 const cookieParser = require('cookie-parser'); // Import cookie-parser
 const { v4: uuidv4 } = require('uuid');
+const jwt = require('jsonwebtoken');
 
 
 // Import controllers
