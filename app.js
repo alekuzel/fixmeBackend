@@ -5,7 +5,9 @@ const bcrypt = require('bcrypt');
 const path = require('path');
 const cookieParser = require('cookie-parser'); // Import cookie-parser
 const { v4: uuidv4 } = require('uuid');
+const listEndpoints = require('express-list-endpoints');
 const jwt = require('jsonwebtoken');
+const bookingsController = require('./controllers/bookingsController');
 
 
 // Import controllers
@@ -57,6 +59,7 @@ app.post('/admin/login', async (req, res) => {
         }
 
         await Admin.updateLastLogin(admin.id, req.ip);
+        
 
         // Generate a unique session ID
         const sessionId = uuidv4();
@@ -144,6 +147,23 @@ app.post('/users/login', async (req, res) => {
         res.status(500).send('An error occurred');
     }
 });
+
+// Create booking
+app.post('/bookings', bookingsController.createBooking);
+
+// Get all bookings
+app.get('/bookings', bookingsController.getAllBookings);
+
+// Get booking by ID
+app.get('/bookings/:bookingID', bookingsController.getBookingByID);
+
+// Update booking by ID
+app.put('/bookings/:bookingID', bookingsController.updateBookingByID);
+
+// Delete booking by ID
+app.delete('/bookings/:bookingID', bookingsController.deleteBookingByID);
+const endpoints = listEndpoints(app);
+console.log(endpoints);
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);

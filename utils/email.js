@@ -11,7 +11,7 @@ const generateUniqueToken = () => {
 };
 
 const sendConfirmationEmail = async (email, token) => {
-    const confirmationLink = `http://localhost:3000/confirm?token=${token}`; // Use the confirmation token
+    const confirmationLink = `http://localhost:3001/confirm?token=${token}`; // Use the confirmation token
 
     const msg = {
         to: email,
@@ -30,7 +30,7 @@ const sendConfirmationEmail = async (email, token) => {
 };
 
 const sendResetPasswordEmail = async (email, token) => {
-    const resetLink = `http://localhost:3000/reset-password?token=${token}`; // Use the reset token
+    const resetLink = `http://localhost:3001/reset-password?token=${token}`; // Use the reset token
 
     const msg = {
         to: email,
