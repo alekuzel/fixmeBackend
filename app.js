@@ -59,7 +59,6 @@ app.post('/admin/login', async (req, res) => {
         }
 
         await Admin.updateLastLogin(admin.id, req.ip);
-        
 
         // Generate a unique session ID
         const sessionId = uuidv4();
