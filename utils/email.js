@@ -15,7 +15,7 @@ const sendConfirmationEmail = async (email, token) => {
 
     const msg = {
         to: email,
-        from: 'a.brods@gmail.com', // LATER no-reply@fixmeapp.se
+        from: 'no-reply@domain.com', // SET YOUR EMAIL HERE
         subject: 'Confirm Your Registration',
         html: `<p>Please click the following link to confirm your registration: <a href="${confirmationLink}">${confirmationLink}</a></p>`,
     };
@@ -34,7 +34,7 @@ const sendResetPasswordEmail = async (email, token) => {
 
     const msg = {
         to: email,
-        from: 'a.brods@gmail.com', // Use the email address you verified with SendGrid
+        from: 'no-reply@domain.com', // SET YOUR EMAIL HERE
         subject: 'Reset Your Password',
         html: `<p>Please click the following link to reset your password: <a href="${resetLink}">${resetLink}</a></p>`,
     };
