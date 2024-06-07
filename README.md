@@ -1,4 +1,4 @@
-# Befintliga endpoints kring admin funktionalitet
+# Endpoints which handle admins
 
 
 1. **Register Admin**
@@ -145,7 +145,7 @@
         - Body: `{ "message": "An error occurred" }`
 
 
-# Möjliga endpoints kring users funktionalitet
+# Some of the possible further endpoints 
 
 
 1. **User Authentication**
@@ -176,3 +176,12 @@
 
 9. **Prediction and Pre-booking**
     - `GET /api/suggested-bookings`: Get suggestions for the next booking based on user's history.
+  
+
+
+**To start the backend** node app.js
+
+set new API key and secret key in the config.js
+
+database created by the script  in database.js when app is started. 
+
